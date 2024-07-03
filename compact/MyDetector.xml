@@ -1,0 +1,92 @@
+<lccdd>
+<!--
+#==========================================================================
+# File: MyDetector.xml
+#
+# Purpose: A simple xml file to create MyDetector: a sphere or air
+# inside a box of water
+#
+# Author: Lorenzo Pezzotti, wildly using dd4hep examples
+#
+# Created: 2/5/2024
+#==========================================================================
+-->
+
+<!-- #==========================================================================
+     #  AIDA Detector description implementation 
+     #==========================================================================
+     # Copyright (C) Organisation europeenne pour la Recherche nucleaire (CERN)
+     # All rights reserved.
+     #
+     # For the licensing terms see $DD4hepINSTALL/LICENSE.
+     # For the list of contributors see $DD4hepINSTALL/doc/CREDITS.
+     #
+     #==========================================================================
+-->
+  <info name="CreateMyDetector"
+    title="Creating an air sphere inside a water box"
+    author="Lorenzo Pezzotti"
+    url="None"
+    status="development"
+    version="0.1">
+    <comment>Creating an air sphere inside a water box</comment>
+  </info>
+
+  <define>
+    <constant name="world_side" value="1*m"/>
+    <constant name="world_x"    value="world_side/2"/>
+    <constant name="world_y"    value="world_side/2"/>
+    <constant name="world_z"    value="world_side/2"/>
+  </define>
+
+  <!-- Include elements.xml file where all elements and single-element materials
+       are defined. Elements are used later on in the "materials" part of this file.
+  -->
+  <includes>
+    <gdmlFile  ref="elements.xml"/>
+  </includes>
+  
+  <!-- Define materials based on their density and element composition.
+       Only materials that will be used in the geometry.
+  -->
+  <materials>
+    <material name="Air">
+      <D type="density" unit="g/cm3" value="0.0012"/>
+      <fraction n="0.754" ref="N"/>
+      <fraction n="0.234" ref="O"/>
+      <fraction n="0.012" ref="Ar"/>
+    </material>
+    <!-- We model vakuum just as very thin air -->
+    <material name="Vacuum">  
+      <D type="density" unit="g/cm3" value="0.0000000001" />
+      <fraction n="0.754" ref="N"/>
+      <fraction n="0.234" ref="O"/>
+      <fraction n="0.012" ref="Ar"/>
+    </material>
+    <material name="Water">
+      <D type="density" value="1.0" unit="g/cm3"/>
+      <composite n="2" ref="H"/>
+      <composite n="1" ref="O"/>
+    </material>
+  </materials>
+  
+  <!-- Define vis attributes for the sphere and the box. Vis attributes contains an
+       alpha value for transparency, r-g-b for color, show daughters possibility true/false
+       and visibile (or invisible) true/false.
+  -->
+  <display>
+    <vis name="TankVis"    alpha="0.1"   r="0"   g="0.0" b="1.0"  showDaughters="true"  visible="true"/>
+  </display>
+
+  <!-- Define the detector. A detector has a name, type to be returned in .cpp file with 
+       DECLARE_DETELEMENT(type,create_detector_c++method), vis attributes (optional),
+       and sensitive-detector (true/false), if sensitive="true" a readout must the passed.
+       If a detector contains sub-detectors, their information must be included as below.
+  -->
+  <detectors>
+    <detector name="MyDetector" type="DD4hep_MyDetector" vis="TankVis" id ="1" sensitive="false">
+      <tank   x="10*m"    y="10*m"    z="10*m"    material="Water"  vis="TankVis"/>
+    </detector>
+  </detectors>
+
+</lccdd>
