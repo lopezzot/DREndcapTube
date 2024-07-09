@@ -19,12 +19,94 @@
 #include <iostream>
 #include <map>
 #include <cmath>
+#include <array>
 
 // Includers from project files
 #include "DREndcapTube.hh"
 
 using namespace dd4hep;
 using namespace dd4hep::detail;
+using namespace dd4hep::rec;
+
+// This struct represents a plane given the 4 vertices
+struct Plane{
+  Vector3D P1,P2,P3,P4;
+  Plane(Vector3D P1, Vector3D P2, Vector3D P3, Vector3D P4) : P1(P1),P2(P2),P3(P3),P4(P4){};
+};
+
+// This struct represents a Zline given a point and a fixed direction
+struct ZLine{
+  Vector3D origin;
+  Vector3D fuZ = Vector3D(0,0,-1);
+  ZLine(Vector3D P) : origin(P){};
+};
+
+// Function to calculate the intersection of a Zline with a plane
+bool intersectLinePlane(const ZLine& line, const Plane& plane, Vector3D& intersection) {
+    Vector3D p0 = plane.P1;
+    Vector3D p1 = plane.P2;
+    Vector3D p2 = plane.P3;
+
+    // Compute the plane normal
+    Vector3D u = Vector3D(p1.x() - p0.x(), p1.y() - p0.y(), p1.z() - p0.z());
+    Vector3D v = Vector3D(p2.x() - p0.x(), p2.y() - p0.y(), p2.z() - p0.z());
+    Vector3D normal = Vector3D(u.y() * v.z() - u.z() * v.y(), u.z() * v.x() - u.x() * v.z(), u.x() * v.y() - u.y() * v.x());
+
+    double denominator = normal.x() * line.fuZ.x() + normal.y() * line.fuZ.y() + normal.z() * line.fuZ.z();
+
+    if (std::fabs(denominator) < 1e-6) {
+        return false; // The line is parallel to the plane
+    }
+
+    double d = normal.x() * p0.x() + normal.y() * p0.y() + normal.z() * p0.z();
+    double t = (d - normal.x() * line.origin.x() - normal.y() * line.origin.y() - normal.z() * line.origin.z()) / denominator;
+
+    if (t < 0) {
+        return false; // The intersection is behind the line origin
+    }
+
+    intersection = Vector3D(line.origin.x() + t * line.fuZ.x(),
+                            line.origin.y() + t * line.fuZ.y(),
+                            line.origin.z() + t * line.fuZ.z());
+
+    return true;
+};
+
+// Function to calculate fiber length
+double GetFiberLength(const Vector3D (&pt)[8], const Vector3D& point){
+    Plane FirstPlane(pt[0],pt[1],pt[2],pt[3]);
+    Plane SecondPlane(pt[1],pt[5],pt[3],pt[7]);
+    Plane ThirdPlane(pt[2],pt[3],pt[6],pt[7]);
+    Plane FourthPlane(pt[0],pt[4],pt[2],pt[6]);
+    Plane FifthPlane(pt[0],pt[1],pt[5],pt[4]);
+    std::array<Plane, 5> Planes{FirstPlane, SecondPlane, ThirdPlane, FourthPlane, FifthPlane};
+    // I calculate the intersection over four line (up, down, left, right) of the capillary
+    ZLine PointZLine(point);
+    ZLine UpPointZLine(Vector3D(point.x(),point.y()+2.0*mm,point.z()));
+    ZLine DownPointZLine(Vector3D(point.x(),point.y()-2.0*mm,point.z()));
+    ZLine LeftPointZLine(Vector3D(point.x()-2.0*mm,point.y(),point.z()));
+    ZLine RightPointZLine(Vector3D(point.x()+2.0*mm,point.y(),point.z()));
+    std::array<ZLine, 4> Lines{UpPointZLine, DownPointZLine, LeftPointZLine, RightPointZLine};
+    // Intersection to be found
+    Vector3D intersection;
+    double FiberLength = 0.;
+    int side = 99.; //which capillary side intersected first
+    for(std::size_t k=0; k<Lines.size(); k++){
+      for(std::size_t i=0; i<Planes.size(); i++){
+        auto truth = intersectLinePlane(Lines.at(k), Planes.at(i), intersection);
+        //auto truth = intersectLinePlane(PointZLine, Planes.at(i), intersection);
+        double FiberLengthPlane = (Lines.at(k).origin-intersection).r();
+        //double FiberLengthPlane = (point-intersection).r();
+        //std::cout<<"Plane "<<i<<" FiberLengthPlane "<<FiberLengthPlane<<std::endl;
+        if(k==0 && i==0) FiberLength = FiberLengthPlane;
+        else if (FiberLength > FiberLengthPlane) FiberLength = FiberLengthPlane;
+        else {;} 
+        std::cout<<"k "<<k<<" i "<<i<<" "<<FiberLength<<std::endl;
+      }
+    }
+    std::cout<<"point "<<point.x()<<" "<<point.y()<<" final fiber length "<<FiberLength<<std::endl;
+    return FiberLength;
+}
 
 // A sphere a air inside a box of water
 static Ref_t create_detector(Detector &description, xml_h e, SensitiveDetector /* sens */)  {
@@ -40,6 +122,7 @@ static Ref_t create_detector(Detector &description, xml_h e, SensitiveDetector /
   xml_det_t   x_tank   = x_det.child(_Unicode(tank));
   xml_det_t   x_stave  = x_det.child(_Unicode(stave));
   xml_det_t   x_tower  = x_det.child(_Unicode(tower));
+  xml_det_t   x_capillary  = x_det.child(_Unicode(capillary));
 
   // Create the box of water that contains the bubble
   std::cout<<"--> Going to create a box of water sphere with dimensions: "
@@ -125,6 +208,12 @@ static Ref_t create_detector(Detector &description, xml_h e, SensitiveDetector /
     phiERPlaced.addPhysVolID("phiERPlace",j);
   }
 
+  // Create a brass tube
+  const double tubeRadius = 2.0*mm;
+  Tube capillary(0.*mm, tubeRadius, tower_height/2., 2*M_PI);
+  Volume capillaryLog("capillaryLog",capillary,description.material(x_tank.attr<std::string>(_U(material))));
+  capillaryLog.setVisAttributes(description, x_capillary.visStr());
+
   // Build the towers inside and endcap R slice
   //
   Helper.Rbool(1);
@@ -137,7 +226,7 @@ static Ref_t create_detector(Detector &description, xml_h e, SensitiveDetector /
   double fulltheta = thetaE; // 45 deg by construction
 
   //for(int i=0;i<NbOfEndcap-1;i++){
-  for(int i=0;i<NbOfEndcap-1;i++){
+  for(int i=0;i<1;i++){
 
     // this is theta angle from beam pipe up
     // center of first (highest) tower is 45 deg - deltatheta_endcap[i]
@@ -207,15 +296,90 @@ static Ref_t create_detector(Detector &description, xml_h e, SensitiveDetector /
     //G4ThreeVector c_new(-c.getY(),c.getZ(),c.getX()-(innerR+0.5*length));
     dd4hep::rec::Vector3D c_new(-c.y(),c.z(),c.x()-(innerR+0.5*length));
     //if(i<35) new G4PVPlacement(rm,c_new,towerLV,name,phiERLog,false,NbOfBarrel+i+1,false);
-    if(i<35) {
-        Transform3D tower_trnsform(rotX*rotY*rotZ, Position(c_new.x(),c_new.y(),c_new.z())); 
-        phiERLog.placeVolume(towerLog,i,tower_trnsform);
-    }
+    //if(i<35) {
+    //    Transform3D tower_trnsform(rotX*rotY*rotZ, Position(c_new.x(),c_new.y(),c_new.z())); 
+    //    phiERLog.placeVolume(towerLog,i,tower_trnsform);
+    //}
     //if(i<35) tank_vol.placeVolume(towerLog,i,tower_rot);
+    if(i==0) tank_vol.placeVolume(towerLog);
     //if(i<35) tank_vol.placeVolume(towerLog,i,rotX*rotY*rotZ);
+
+
+
+
+
+
+
+
+
+    // Capillary placement inside tower(s)
+    //
+    const double tubeDiameter = tubeRadius*2.;
+    const double y_pitch = tubeDiameter*sqrt(3)/2.; //y-distance from center to center
+    //Fill a tower along y
+    double y_backplane = pt[4].y();
+    double x_backplane = pt[4].x();
+    double x_start = 0;
+    for(std::size_t k=14; k<15; k++){
+      x_start = x_backplane;
+      double y_tube = 0.;
+      double delta_x = 0.;
+      if(k==0) y_tube = y_backplane + tubeRadius + 1.0*mm; //add 1 mm otherwise the tube immediately intersect with a plane
+      else {
+        y_tube = y_backplane + tubeRadius + 1.0*mm + k*2.*y_pitch;
+
+        // Adjust starting x given the opening angle of the Trap back face
+        double hypotenuse = sqrt(pow((-1*y_backplane)*2,2) + pow(pt[6].x()-pt[4].x(),2));
+        double angle = acos(((-1*y_backplane)*2) / hypotenuse);
+        delta_x = ((-1.*y_backplane) - (-1.*y_tube)) * tan(angle);
+        std::cout<<k<<" delta x "<<delta_x<<std::endl;
+      }
+      if(delta_x > tubeDiameter) {
+          // Calculate how many fibers should be inserted in x
+          // Caveat: casting to int does not round takes only the 
+          // integer part (i.e. 6.9 -> 6)
+          auto newFibersNo = static_cast<int>(delta_x/tubeDiameter);
+          x_start = x_start - newFibersNo*tubeDiameter;
+          std::cout<<k<<" longerrrrrrrrrrr delta_x "<<delta_x/cm<<" cm "<<newFibersNo<<" "<<newFibersNo*tubeDiameter<<std::endl;
+          std::cout<<"x_start "<<x_start<<std::endl;
+      }
+
+      //Fill a tower row along x
+      for(std::size_t j=0;j<100;j++){
+         auto x_tube = x_start  + tubeRadius + j*(tubeDiameter); 
+         std::cout<<"x_tube "<<x_tube<<" x_backplane "<<x_backplane<<" tubeRadius "<<tubeRadius<<std::endl;
+         std::cout<<"y_tube "<<y_tube<<" y_backplane "<<y_backplane<<" tubeRadius "<<tubeRadius<<std::endl;
+         Vector3D capillaryPos(x_tube, y_tube, length/2.);
+         auto capillaryLength = GetFiberLength(pt,capillaryPos);
+         //std::cout<<" my x y "<<x_tube<<" "<<y_tube<<" length "<<capillaryLength<<std::endl;
+         if(capillaryLength == length){
+           PlacedVolume capillaryPlaced = towerLog.placeVolume(capillaryLog, 1000*k+j, Position(x_tube, y_tube, 0.));
+         }
+         else{
+           std::cout<<"short fiber"<<std::endl;
+           std::cout<<x_tube<<" y_tube "<<y_tube<<" k "<<k<<std::endl;
+           Tube capillaryShort(0.*mm, tubeRadius, capillaryLength/2., 2*M_PI);
+           Volume capillaryShortLog("capillaryShortLog",capillaryShort,description.material(x_tank.attr<std::string>(_U(material))));
+           capillaryShortLog.setVisAttributes(description, x_capillary.visStr());
+           PlacedVolume capillaryShortPlaced = towerLog.placeVolume(capillaryShortLog, 1000*k+j, Position(x_tube, y_tube, length/2.-capillaryLength/2.));
+           std::cout<<"placed length "<<capillaryLength<<std::endl;
+         }
+         if((-1.*x_backplane)+delta_x-x_tube < (tubeDiameter+tubeRadius)) break;
+      } // end x loop
+ 
+      // y_backplane is equal up and down so I can keep the same for exiting loop
+      if((-1.*y_backplane)-y_tube < (2.*y_pitch+tubeRadius)) break;
+    } // end y loop
+
+
+
+
+    // Update parameters
     Helper.Getpt(pt);
     fulltheta = fulltheta-deltatheta_endcap[i];
   } 
+
+
 
 
 
