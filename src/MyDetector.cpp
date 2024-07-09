@@ -314,6 +314,13 @@ static Ref_t create_detector(Detector &description, xml_h e, SensitiveDetector /
 
     // Capillary placement inside tower(s)
     //
+    // offset to be applied to capillary tubes
+    // with length reduced by the intersection
+    // with the tower's planes.
+    // It is needed for the intersections with
+    // the lateral sides for which the intersecting
+    // point is not exactly the left or right edge of the tube.
+    const double FiberLengthOffset{0.1*mm}; 
     const double tubeDiameter = tubeRadius*2.;
     const double y_pitch = tubeDiameter*sqrt(3)/2.; //y-distance from center to center
     //Fill a tower along y
@@ -345,7 +352,7 @@ static Ref_t create_detector(Detector &description, xml_h e, SensitiveDetector /
       }
 
       //Fill a tower row along x
-      for(std::size_t j=0;j<100;j++){
+      for(std::size_t j=0;j<5;j++){
          auto x_tube = x_start  + tubeRadius + j*(tubeDiameter); 
          std::cout<<"x_tube "<<x_tube<<" x_backplane "<<x_backplane<<" tubeRadius "<<tubeRadius<<std::endl;
          std::cout<<"y_tube "<<y_tube<<" y_backplane "<<y_backplane<<" tubeRadius "<<tubeRadius<<std::endl;
@@ -358,11 +365,12 @@ static Ref_t create_detector(Detector &description, xml_h e, SensitiveDetector /
          else{
            std::cout<<"short fiber"<<std::endl;
            std::cout<<x_tube<<" y_tube "<<y_tube<<" k "<<k<<std::endl;
-           Tube capillaryShort(0.*mm, tubeRadius, capillaryLength/2., 2*M_PI);
+           std::cout<<"length "<<capillaryLength<<std::endl;
+           Tube capillaryShort(0.*mm, tubeRadius, (capillaryLength-FiberLengthOffset)/2., 2*M_PI); // reduced capillary length
+                                                                                                   // by a fixed offset
            Volume capillaryShortLog("capillaryShortLog",capillaryShort,description.material(x_tank.attr<std::string>(_U(material))));
            capillaryShortLog.setVisAttributes(description, x_capillary.visStr());
-           PlacedVolume capillaryShortPlaced = towerLog.placeVolume(capillaryShortLog, 1000*k+j, Position(x_tube, y_tube, length/2.-capillaryLength/2.));
-           std::cout<<"placed length "<<capillaryLength<<std::endl;
+           PlacedVolume capillaryShortPlaced = towerLog.placeVolume(capillaryShortLog, 1000*k+j, Position(x_tube, y_tube, length/2.-capillaryLength/2.+FiberLengthOffset/2.));
          }
          if((-1.*x_backplane)+delta_x-x_tube < (tubeDiameter+tubeRadius)) break;
       } // end x loop
