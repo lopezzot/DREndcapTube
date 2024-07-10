@@ -165,7 +165,7 @@ inline void DREndcapTubeHelper::Getpt(dd4hep::rec::Vector3D *pt) {
 	}
 	
         for(std::size_t i=0;i<8;i++){
-            std::cout<<"pt at i "<<pt[i].x()/mm<<" "<<pt[i].y()/mm<<" "<<pt[i].z()/mm<<std::endl;
+            //std::cout<<"pt at i "<<pt[i].x()/mm<<" "<<pt[i].y()/mm<<" "<<pt[i].z()/mm<<std::endl;
         }
 	//cout<<"ENDCAP Y_int = "<<innerSide_half*2<<" Y_out = "<<outerSide_half*2<<" X_inn = "<<pt[3](0)-pt[2](0)<<" X_out = "<<pt[7](0)-pt[6](0)<<std::endl;
 //cout<<std::endl;

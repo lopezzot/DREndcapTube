@@ -101,10 +101,10 @@ double GetFiberLength(const Vector3D (&pt)[8], const Vector3D& point){
         if(k==0 && i==0) FiberLength = FiberLengthPlane;
         else if (FiberLength > FiberLengthPlane) FiberLength = FiberLengthPlane;
         else {;} 
-        std::cout<<"k "<<k<<" i "<<i<<" "<<FiberLength<<std::endl;
+        //std::cout<<"k "<<k<<" i "<<i<<" "<<FiberLength<<std::endl;
       }
     }
-    std::cout<<"point "<<point.x()<<" "<<point.y()<<" final fiber length "<<FiberLength<<std::endl;
+    //std::cout<<"point "<<point.x()<<" "<<point.y()<<" final fiber length "<<FiberLength<<std::endl;
     return FiberLength;
 }
 
@@ -262,7 +262,7 @@ static Ref_t create_detector(Detector &description, xml_h e, SensitiveDetector /
     auto fThetaCphi = ((pt[4]).x()+pDy2*fTalpha2+pDx3)/pDz;
     std::cout<<pt[4].x()<<" "<<pDy2<<" "<<fTalpha2<<" "<<pDx3<<" "<<pDz<<std::endl;
     auto fThetaSphi = ((pt[4]).y()+pDy2)/pDz;
-    std::cout<<"theta c phi "<<fThetaCphi<<" "<<fThetaSphi<<std::endl;
+    //std::cout<<"theta c phi "<<fThetaCphi<<" "<<fThetaSphi<<std::endl;
     double pPhi = 0.;
     double pTheta = 0.;
     if(fThetaSphi==0. && fThetaCphi==0.){}
@@ -275,7 +275,7 @@ static Ref_t create_detector(Detector &description, xml_h e, SensitiveDetector /
     //std::cout<<name<<std::endl;
 
     Trap tower( "phiER", pDz, pTheta, pPhi, pDy1, pDx1, pDx2, pAlp1, pDy2, pDx3, pDx4, pAlp2);
-    std::cout<<"tower dim "<<tower.dZ()<<" "<<tower.theta()<<" "<<tower.phi()<<std::endl;
+    //std::cout<<"tower dim "<<tower.dZ()<<" "<<tower.theta()<<" "<<tower.phi()<<std::endl;
     Volume towerLog("towerLog", tower, description.material(x_tank.attr<std::string>(_U(material))));
     towerLog.setVisAttributes(description, x_tower.visStr());
 
@@ -292,7 +292,7 @@ static Ref_t create_detector(Detector &description, xml_h e, SensitiveDetector /
     RotationZ rotZ(0.);
     //G4ThreeVector c = dimE->GetOrigin(0);
     dd4hep::rec::Vector3D c = Helper.GetOrigin(0);
-    std::cout<<"origin x "<<c.x()<<" "<<" y "<<c.y()<<" z "<<c.z()<<std::endl;
+    //std::cout<<"origin x "<<c.x()<<" "<<" y "<<c.y()<<" z "<<c.z()<<std::endl;
     //G4ThreeVector c_new(-c.getY(),c.getZ(),c.getX()-(innerR+0.5*length));
     dd4hep::rec::Vector3D c_new(-c.y(),c.z(),c.x()-(innerR+0.5*length));
     //if(i<35) new G4PVPlacement(rm,c_new,towerLV,name,phiERLog,false,NbOfBarrel+i+1,false);
@@ -327,7 +327,7 @@ static Ref_t create_detector(Detector &description, xml_h e, SensitiveDetector /
     double y_backplane = pt[4].y();
     double x_backplane = pt[4].x();
     double x_start = 0;
-    for(std::size_t k=0; k<15; k++){
+    for(std::size_t k=2; k<3; k++){
       x_start = x_backplane;
       double y_tube = 0.;
       double delta_x = 0.;
@@ -339,7 +339,7 @@ static Ref_t create_detector(Detector &description, xml_h e, SensitiveDetector /
         double hypotenuse = sqrt(pow((-1*y_backplane)*2,2) + pow(pt[6].x()-pt[4].x(),2));
         double angle = acos(((-1*y_backplane)*2) / hypotenuse);
         delta_x = ((-1.*y_backplane) - (-1.*y_tube)) * tan(angle);
-        std::cout<<k<<" delta x "<<delta_x<<std::endl;
+        //std::cout<<k<<" delta x "<<delta_x<<std::endl;
       }
       if(delta_x > tubeDiameter) {
           // Calculate how many fibers should be inserted in x
@@ -347,15 +347,13 @@ static Ref_t create_detector(Detector &description, xml_h e, SensitiveDetector /
           // integer part (i.e. 6.9 -> 6)
           auto newFibersNo = static_cast<int>(delta_x/tubeDiameter);
           x_start = x_start - newFibersNo*tubeDiameter;
-          std::cout<<k<<" longerrrrrrrrrrr delta_x "<<delta_x/cm<<" cm "<<newFibersNo<<" "<<newFibersNo*tubeDiameter<<std::endl;
-          std::cout<<"x_start "<<x_start<<std::endl;
+          //std::cout<<k<<" longerrrrrrrrrrr delta_x "<<delta_x/cm<<" cm "<<newFibersNo<<" "<<newFibersNo*tubeDiameter<<std::endl;
+          //std::cout<<"x_start "<<x_start<<std::endl;
       }
 
       //Fill a tower row along x
-      for(std::size_t j=0;j<1;j++){
+      for(std::size_t j=0;j<1000;j++){
          auto x_tube = x_start  + tubeRadius + j*(tubeDiameter); 
-         std::cout<<"x_tube "<<x_tube<<" x_backplane "<<x_backplane<<" tubeRadius "<<tubeRadius<<std::endl;
-         std::cout<<"y_tube "<<y_tube<<" y_backplane "<<y_backplane<<" tubeRadius "<<tubeRadius<<std::endl;
          Vector3D capillaryPos(x_tube, y_tube, length/2.);
          auto capillaryLength = GetFiberLength(pt,capillaryPos);
          //std::cout<<" my x y "<<x_tube<<" "<<y_tube<<" length "<<capillaryLength<<std::endl;
@@ -363,20 +361,21 @@ static Ref_t create_detector(Detector &description, xml_h e, SensitiveDetector /
            PlacedVolume capillaryPlaced = towerLog.placeVolume(capillaryLog, 1000*k+j, Position(x_tube, y_tube, 0.));
          }
          else{
-           std::cout<<"short fiber"<<std::endl;
-           std::cout<<x_tube<<" y_tube "<<y_tube<<" k "<<k<<std::endl;
-           std::cout<<"length "<<capillaryLength<<std::endl;
            // Note: the root visualizer does not display tubes with capillaryLength < 4.5 cm.
            // Such tubes are usually the ones closest to the left or right side of a tower.
            // They seem to be placed correctly but not displayed. 
            // I am adding a cut over tube length of 5.0 cm: tubes below it will not be placed.
-           Tube capillaryShort(0.*mm, tubeRadius, (capillaryLength-FiberLengthOffset)/2., 2*M_PI); // reduced capillary length
-                                                                                                   // by a fixed offset
-           Volume capillaryShortLog("capillaryShortLog",capillaryShort,description.material(x_tank.attr<std::string>(_U(material))));
-           capillaryShortLog.setVisAttributes(description, x_capillary.visStr());
-           PlacedVolume capillaryShortPlaced = towerLog.placeVolume(capillaryShortLog, 1000*k+j, Position(x_tube, y_tube, length/2.-capillaryLength/2.+FiberLengthOffset/2.));
+           if (capillaryLength > 5.0*cm) { // do not place tubes with length < 5.0 cm
+             Tube capillaryShort(0.*mm, tubeRadius, (capillaryLength-FiberLengthOffset)/2., 2*M_PI); // reduced capillary length
+                                                                                                     // by a fixed offset
+             Volume capillaryShortLog("capillaryShortLog",capillaryShort,description.material(x_tank.attr<std::string>(_U(material))));
+             capillaryShortLog.setVisAttributes(description, x_capillary.visStr());
+             PlacedVolume capillaryShortPlaced = towerLog.placeVolume(capillaryShortLog, 1000*k+j, Position(x_tube, y_tube, length/2.-capillaryLength/2.+FiberLengthOffset/2.));
+           }
          }
-         if((-1.*x_backplane)+delta_x-x_tube < (tubeDiameter+tubeRadius)) break;
+         std::cout<<k<<" "<<j<<" exit3 x_backplane "<<(-1.*x_backplane)<<" delta_x "<<delta_x<<" x_tube "<<x_tube<<std::endl;
+         std::cout<<"difference "<<(-1.*x_backplane)+delta_x-x_tube<<std::endl;
+         if(-1.*x_backplane+delta_x-x_tube < tubeDiameter+tubeRadius) break;
       } // end x loop
  
       // y_backplane is equal up and down so I can keep the same for exiting loop
