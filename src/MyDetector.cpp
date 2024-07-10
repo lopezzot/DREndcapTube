@@ -327,7 +327,7 @@ static Ref_t create_detector(Detector &description, xml_h e, SensitiveDetector /
     double y_backplane = pt[4].y();
     double x_backplane = pt[4].x();
     double x_start = 0;
-    for(std::size_t k=14; k<15; k++){
+    for(std::size_t k=0; k<15; k++){
       x_start = x_backplane;
       double y_tube = 0.;
       double delta_x = 0.;
@@ -352,7 +352,7 @@ static Ref_t create_detector(Detector &description, xml_h e, SensitiveDetector /
       }
 
       //Fill a tower row along x
-      for(std::size_t j=0;j<5;j++){
+      for(std::size_t j=0;j<1;j++){
          auto x_tube = x_start  + tubeRadius + j*(tubeDiameter); 
          std::cout<<"x_tube "<<x_tube<<" x_backplane "<<x_backplane<<" tubeRadius "<<tubeRadius<<std::endl;
          std::cout<<"y_tube "<<y_tube<<" y_backplane "<<y_backplane<<" tubeRadius "<<tubeRadius<<std::endl;
@@ -366,6 +366,10 @@ static Ref_t create_detector(Detector &description, xml_h e, SensitiveDetector /
            std::cout<<"short fiber"<<std::endl;
            std::cout<<x_tube<<" y_tube "<<y_tube<<" k "<<k<<std::endl;
            std::cout<<"length "<<capillaryLength<<std::endl;
+           // Note: the root visualizer does not display tubes with capillaryLength < 4.5 cm.
+           // Such tubes are usually the ones closest to the left or right side of a tower.
+           // They seem to be placed correctly but not displayed. 
+           // I am adding a cut over tube length of 5.0 cm: tubes below it will not be placed.
            Tube capillaryShort(0.*mm, tubeRadius, (capillaryLength-FiberLengthOffset)/2., 2*M_PI); // reduced capillary length
                                                                                                    // by a fixed offset
            Volume capillaryShortLog("capillaryShortLog",capillaryShort,description.material(x_tank.attr<std::string>(_U(material))));
@@ -385,7 +389,7 @@ static Ref_t create_detector(Detector &description, xml_h e, SensitiveDetector /
     // Update parameters
     Helper.Getpt(pt);
     fulltheta = fulltheta-deltatheta_endcap[i];
-  } 
+  } //End of towers creation
 
 
 
@@ -412,7 +416,7 @@ static Ref_t create_detector(Detector &description, xml_h e, SensitiveDetector /
   // Create a (DetElement) corresponding to MyDetector.
   // From DD4hep docs https://dd4hep.web.cern.ch/dd4hep/usermanuals/DD4hepManual/DD4hepManualch2.html
   // "Construct the main detector element of this subdetector.This will be the unique entry point
-  //  to access any information of the subdetector."
+  // to access any information of the subdetector."
   DetElement  sdet(det_name,x_det.id());
   // Then "Place the subdetector envelope into its mother (typically the top level (world) volume)."
   Volume motherVolume = description.pickMotherVolume(sdet);
