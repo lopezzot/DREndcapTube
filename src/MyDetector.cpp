@@ -381,7 +381,7 @@ static Ref_t create_detector(Detector &description, xml_h e, SensitiveDetector /
          }
          // Check if this is the last S tube
          bool IsLastTube_S = -1.*x_backplane+delta_x-x_tube < tubeDiameter+tubeRadius ? true : false;
-         // to add a check over y to see if there is enough room to place a C tube row
+         if((-1.*y_backplane)-y_tube < (y_pitch+tubeRadius)) break; // not place place C tube if there is no room on y
 
          // After the S tube placement I place the closest C tube
          // according to the fixed structure of the tubes placement (gluing)
