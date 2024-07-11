@@ -79,6 +79,7 @@
     <vis name="StaveVis"   alpha="0.1"   r="0"   g="0.0" b="1.0"  showDaughters="true"  visible="false"/>
     <vis name="TowerVis"   alpha="0.5"   r="1.0"   g="0.624" b="0.0"  showDaughters="true"  visible="true"/>
     <vis name="CapillaryVis" alpha="1.0" r="0.0"  g="0.0" b="1.0" showDaughters="false" visible="true"/>
+    <vis name="CapillaryVis_C" alpha="1.0" r="1.0"  g="0.0" b="0.0" showDaughters="false" visible="true"/>
   </display>
 
   <!-- Define the detector. A detector has a name, type to be returned in .cpp file with 
@@ -92,6 +93,7 @@
       <stave material="Air" vis="StaveVis"/>
       <tower material="Air" vis="TowerVis"/>
       <capillary material="Air" vis="CapillaryVis"/>
+      <capillary_C material="Air" vis="CapillaryVis_C"/>
     </detector>
   </detectors>
 

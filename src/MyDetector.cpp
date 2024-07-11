@@ -123,6 +123,7 @@ static Ref_t create_detector(Detector &description, xml_h e, SensitiveDetector /
   xml_det_t   x_stave  = x_det.child(_Unicode(stave));
   xml_det_t   x_tower  = x_det.child(_Unicode(tower));
   xml_det_t   x_capillary  = x_det.child(_Unicode(capillary));
+  xml_det_t   x_capillary_C  = x_det.child(_Unicode(capillary_C));
 
   // Create the box of water that contains the bubble
   std::cout<<"--> Going to create a box of water sphere with dimensions: "
@@ -213,6 +214,11 @@ static Ref_t create_detector(Detector &description, xml_h e, SensitiveDetector /
   Tube capillary(0.*mm, tubeRadius, tower_height/2., 2*M_PI);
   Volume capillaryLog("capillaryLog",capillary,description.material(x_tank.attr<std::string>(_U(material))));
   capillaryLog.setVisAttributes(description, x_capillary.visStr());
+
+  // Create a tube for C fibers
+  Tube capillary_C(0.*mm, tubeRadius, tower_height/2., 2*M_PI);
+  Volume capillaryLog_C("capillaryLog_C",capillary_C,description.material(x_tank.attr<std::string>(_U(material))));
+  capillaryLog_C.setVisAttributes(description, x_capillary_C.visStr());
 
   // Build the towers inside and endcap R slice
   //
@@ -327,7 +333,7 @@ static Ref_t create_detector(Detector &description, xml_h e, SensitiveDetector /
     double y_backplane = pt[4].y();
     double x_backplane = pt[4].x();
     double x_start = 0;
-    for(std::size_t k=2; k<3; k++){
+    for(std::size_t k=0; k<15; k++){
       x_start = x_backplane;
       double y_tube = 0.;
       double delta_x = 0.;
@@ -373,9 +379,38 @@ static Ref_t create_detector(Detector &description, xml_h e, SensitiveDetector /
              PlacedVolume capillaryShortPlaced = towerLog.placeVolume(capillaryShortLog, 1000*k+j, Position(x_tube, y_tube, length/2.-capillaryLength/2.+FiberLengthOffset/2.));
            }
          }
-         std::cout<<k<<" "<<j<<" exit3 x_backplane "<<(-1.*x_backplane)<<" delta_x "<<delta_x<<" x_tube "<<x_tube<<std::endl;
-         std::cout<<"difference "<<(-1.*x_backplane)+delta_x-x_tube<<std::endl;
-         if(-1.*x_backplane+delta_x-x_tube < tubeDiameter+tubeRadius) break;
+         // Check if this is the last S tube
+         bool IsLastTube_S = -1.*x_backplane+delta_x-x_tube < tubeDiameter+tubeRadius ? true : false;
+         // to add a check over y to see if there is enough room to place a C tube row
+
+         // After the S tube placement I place the closest C tube
+         // according to the fixed structure of the tubes placement (gluing)
+         //
+         // If the S tube below was not placed (too short) do not place the C either
+         // && if it was the last S tube do not place the next C tube
+         if (capillaryLength > 5.0*cm && !IsLastTube_S){
+           double x_tube_C = x_tube + tubeRadius;
+           std::cout<<"Cher "<<x_tube<<" "<<x_tube_C<<std::endl;
+           double y_tube_C = y_tube + y_pitch; 
+           Vector3D capillaryPos_C(x_tube_C, y_tube_C, length/2.);
+           auto capillaryLength_C = GetFiberLength(pt,capillaryPos_C);
+           std::cout<<"capillary length c "<<capillaryLength_C<<std::endl;
+           if(capillaryLength_C == length){
+             PlacedVolume capillaryPlaced_C = towerLog.placeVolume(capillaryLog_C, 100000*k+j, Position(x_tube_C, y_tube_C, 0.));
+           } 
+           else{
+             if (capillaryLength_C > 5.0*cm){
+               Tube capillaryShort_C(0.*mm, tubeRadius, (capillaryLength_C-FiberLengthOffset)/2., 2*M_PI); // reduced capillary length
+                                                                                                         // by a fixed offset
+               Volume capillaryShortLog_C("capillaryShortLog_C",capillaryShort_C,description.material(x_tank.attr<std::string>(_U(material))));
+               capillaryShortLog_C.setVisAttributes(description, x_capillary_C.visStr());
+               PlacedVolume capillaryShortPlaced_C = towerLog.placeVolume(capillaryShortLog_C, 100000*k+j, Position(x_tube_C, y_tube_C, length/2.-capillaryLength_C/2.+FiberLengthOffset/2.));
+             }
+           }
+         }
+           
+         // condition for stopping S capillary placement along x
+         if(IsLastTube_S) break;
       } // end x loop
  
       // y_backplane is equal up and down so I can keep the same for exiting loop
