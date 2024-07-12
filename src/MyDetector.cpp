@@ -29,19 +29,20 @@ using namespace dd4hep::rec;
 //
 static Ref_t create_detector(Detector &description, xml_h e, SensitiveDetector /* sens */)  {
 
-  std::cout<<"--> MyDetector::create_detector() start"<<std::endl;
+  std::cout<<"--> DREndcapTube::create_detector() start"<<std::endl;
 
-  // Get MyDetector info coded in MyDetector.xml file
+  // Get info coded in the xml file
+  // 
+  // Info for whole detector element DREndcapTube
   xml_det_t   x_det    = e;
-  std::string det_name = x_det.nameStr();
-  std::cout<<"--> Getting detector name from xml file: "<<det_name<<", with ID: "<<x_det.id()<<std::endl;
-
-  // Get xml info also for subdetectors: tank, stave and tower
+  std::string det_name = x_det.nameStr(); // DREndcapTube volume
+  std::cout<<"--> Going to create "<<det_name<<", with ID: "<<x_det.id()<<std::endl;
+  // Info for subdetectors
   xml_det_t   x_tank   = x_det.child(_Unicode(tank));
   xml_det_t   x_stave  = x_det.child(_Unicode(stave));
   xml_det_t   x_tower  = x_det.child(_Unicode(tower));
-  xml_det_t   x_capillary  = x_det.child(_Unicode(capillary));
-  xml_det_t   x_capillary_C  = x_det.child(_Unicode(capillary_C));
+  xml_det_t   x_capillary_S  = x_det.child(_Unicode(tube_S));
+  xml_det_t   x_capillary_C  = x_det.child(_Unicode(tube_C));
 
   // Create the box of water that contains the bubble
   std::cout<<"--> Going to create a box of water sphere with dimensions: "
@@ -133,7 +134,7 @@ static Ref_t create_detector(Detector &description, xml_h e, SensitiveDetector /
   //const double tubeRadius = 2.0*mm;
   Tube capillary(0.*mm, tubeRadius, tower_height/2., 2*M_PI);
   Volume capillaryLog("capillaryLog",capillary,description.material(x_tank.attr<std::string>(_U(material))));
-  capillaryLog.setVisAttributes(description, x_capillary.visStr());
+  capillaryLog.setVisAttributes(description, x_capillary_S.visStr());
 
   // Create a tube for C fibers
   Tube capillary_C(0.*mm, tubeRadius, tower_height/2., 2*M_PI);
@@ -169,9 +170,9 @@ static Ref_t create_detector(Detector &description, xml_h e, SensitiveDetector /
     Helper.SetThetaOfCenter2(thetaofcenter2);
     Helper.CalBasic();
     Helper.Getpt(pt);
-    for(int i=0; i<8;i++){
-      std::cout<<i<<" "<<pt[i].x()<<" "<<pt[i].y()<<" "<<pt[i].z()<<std::endl;
-    }
+    //for(int i=0; i<8;i++){
+    //  std::cout<<i<<" "<<pt[i].x()<<" "<<pt[i].y()<<" "<<pt[i].z()<<std::endl;
+    //}
     
     // Calculation of parameters to create Trap
     auto pDz = (pt[7]).z();
@@ -186,7 +187,7 @@ static Ref_t create_detector(Detector &description, xml_h e, SensitiveDetector /
     auto fTalpha2 = ((pt[6]).x()+(pt[7]).x()-(pt[5]).x()-(pt[4]).x())*0.25/pDy2;
     auto pAlp2 = std::atan(fTalpha2);
     auto fThetaCphi = ((pt[4]).x()+pDy2*fTalpha2+pDx3)/pDz;
-    std::cout<<pt[4].x()<<" "<<pDy2<<" "<<fTalpha2<<" "<<pDx3<<" "<<pDz<<std::endl;
+    //std::cout<<pt[4].x()<<" "<<pDy2<<" "<<fTalpha2<<" "<<pDx3<<" "<<pDz<<std::endl;
     auto fThetaSphi = ((pt[4]).y()+pDy2)/pDz;
     //std::cout<<"theta c phi "<<fThetaCphi<<" "<<fThetaSphi<<std::endl;
     double pPhi = 0.;
@@ -295,7 +296,7 @@ static Ref_t create_detector(Detector &description, xml_h e, SensitiveDetector /
              Tube capillaryShort(0.*mm, tubeRadius, (capillaryLength-FiberLengthOffset)/2., 2*M_PI); // reduced capillary length
                                                                                                      // by a fixed offset
              Volume capillaryShortLog("capillaryShortLog",capillaryShort,description.material(x_tank.attr<std::string>(_U(material))));
-             capillaryShortLog.setVisAttributes(description, x_capillary.visStr());
+             capillaryShortLog.setVisAttributes(description, x_capillary_S.visStr());
              PlacedVolume capillaryShortPlaced = towerLog.placeVolume(capillaryShortLog, 1000*k+j, Position(x_tube, y_tube, length/2.-capillaryLength/2.+FiberLengthOffset/2.));
            }
          }
@@ -310,11 +311,11 @@ static Ref_t create_detector(Detector &description, xml_h e, SensitiveDetector /
          // && if it was the last S tube do not place the next C tube
          if (capillaryLength > 5.0*cm && !IsLastTube_C){
            double x_tube_C = x_tube + tubeRadius;
-           std::cout<<"Cher "<<x_tube<<" "<<x_tube_C<<std::endl;
+           //std::cout<<"Cher "<<x_tube<<" "<<x_tube_C<<std::endl;
            double y_tube_C = y_tube + y_pitch; 
            Vector3D capillaryPos_C(x_tube_C, y_tube_C, length/2.);
            auto capillaryLength_C = Helper.GetTubeLength(pt,capillaryPos_C);
-           std::cout<<"capillary length c "<<capillaryLength_C<<std::endl;
+           //std::cout<<"capillary length c "<<capillaryLength_C<<std::endl;
            if(capillaryLength_C == length){
              PlacedVolume capillaryPlaced_C = towerLog.placeVolume(capillaryLog_C, 100000*k+j, Position(x_tube_C, y_tube_C, 0.));
            } 
@@ -379,7 +380,7 @@ static Ref_t create_detector(Detector &description, xml_h e, SensitiveDetector /
   tankPlace.addPhysVolID("tank",x_det.id());
   sdet.setPlacement(tankPlace);
 
-  std::cout<<"--> MyDetector::create_detector() end"<<std::endl;
+  std::cout<<"--> DREndcapTube::create_detector() end"<<std::endl;
 
   return sdet;
 }
