@@ -52,16 +52,18 @@ static Ref_t create_detector(Detector &description, xml_h e, SensitiveDetector /
   xml_det_t   x_capillary_S  = x_det.child(_Unicode(tube_S));
   xml_det_t   x_capillary_C  = x_det.child(_Unicode(tube_C));
   const double tubeRadius = x_capillary_S.outer_radius();
+
+  // Hardcoded parameters (not supposed to be changed)
+  const double thetaB = M_PI/4; // theta at the end of barrel (45 deg)
+  const int NbOfEndcap = 39;    // number of eta towers for the endcap.
+                                // De facto I will stop at 36 to leave
+                                // room for the beam pipe.
    
   // Create a tank to place the calorimeter
   Box    tank_box(x_tank.x(), x_tank.y(), x_tank.z());
   Volume tank_vol("Tank",tank_box,description.material(x_tank.attr<std::string>(_U(material))));
   tank_vol.setVisAttributes(description, x_tank.visStr());
 
-  // number of eta towers for the barrel
-  const int NbOfBarrel = 40;
-  // number of eta towers for the endcap
-  int NbOfEndcap = NbOfBarrel-1;
 
   // Create helper class
   DREndcapTubeHelper Helper;
@@ -105,11 +107,6 @@ static Ref_t create_detector(Detector &description, xml_h e, SensitiveDetector /
 
   // Place logical volume containing the Endcap R slice multiple times
   //
-  double deltatheta_barrel[40] = {0};
-  // Assign delta theta of each barrel tower
-  for(int i=0;i<NbOfBarrel;i++) deltatheta_barrel[i] = M_PI/4/(NbOfBarrel);
-  double thetaB = 0; // add up max theta at the end of barrel
-  for(int i=0;i<NbOfBarrel;i++) thetaB += deltatheta_barrel[i];
   // Rotate the endcap R slice around the Z axis
   for(int j=0;j<NbOfZRot;j++){
   //for(int j=0;j<1;j++){
