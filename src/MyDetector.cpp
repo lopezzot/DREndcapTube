@@ -281,7 +281,7 @@ static Ref_t create_detector(Detector &description, xml_h e, SensitiveDetector /
       for(std::size_t j=0;j<1000;j++){
          auto x_tube = x_start  + tubeRadius + j*(tubeDiameter); 
          Vector3D capillaryPos(x_tube, y_tube, length/2.);
-         auto capillaryLength = Helper.GetFiberLength(pt,capillaryPos);
+         auto capillaryLength = Helper.GetTubeLength(pt,capillaryPos);
          //std::cout<<" my x y "<<x_tube<<" "<<y_tube<<" length "<<capillaryLength<<std::endl;
          if(capillaryLength == length){
            PlacedVolume capillaryPlaced = towerLog.placeVolume(capillaryLog, 1000*k+j, Position(x_tube, y_tube, 0.));
@@ -313,7 +313,7 @@ static Ref_t create_detector(Detector &description, xml_h e, SensitiveDetector /
            std::cout<<"Cher "<<x_tube<<" "<<x_tube_C<<std::endl;
            double y_tube_C = y_tube + y_pitch; 
            Vector3D capillaryPos_C(x_tube_C, y_tube_C, length/2.);
-           auto capillaryLength_C = Helper.GetFiberLength(pt,capillaryPos_C);
+           auto capillaryLength_C = Helper.GetTubeLength(pt,capillaryPos_C);
            std::cout<<"capillary length c "<<capillaryLength_C<<std::endl;
            if(capillaryLength_C == length){
              PlacedVolume capillaryPlaced_C = towerLog.placeVolume(capillaryLog_C, 100000*k+j, Position(x_tube_C, y_tube_C, 0.));

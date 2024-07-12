@@ -107,7 +107,7 @@ class DREndcapTubeHelper {
     void IntersectLinePlane(const ZLine& line, const Plane& plane, Vector3D& intersection);
     // This method calculates a tube length given the cylindrical structure of the tube
     // and each tower face
-    double GetFiberLength(const Vector3D (&pt)[8], const Vector3D& point);
+    double GetTubeLength(const Vector3D (&pt)[8], const Vector3D& point);
 };
 
 inline void DREndcapTubeHelper::CalBasic(){
@@ -277,7 +277,7 @@ inline void DREndcapTubeHelper::IntersectLinePlane(const ZLine& line, const Plan
 // The intersection is calculated over 5 planes (tower front, up, down, left and right faces).
 // For each plane the intersection is calculated over four points on the tube surface (up, down, left, right).
 // The shortest intersection is the one to be used.
-inline double DREndcapTubeHelper::GetFiberLength(const Vector3D (&pt)[8], const Vector3D& point){
+inline double DREndcapTubeHelper::GetTubeLength(const Vector3D (&pt)[8], const Vector3D& point){
     Plane FirstPlane(pt[0],pt[1],pt[2],pt[3]); // front plane (smallest one)
     Plane SecondPlane(pt[1],pt[5],pt[3],pt[7]);// right plane (looking at the front face)
     Plane ThirdPlane(pt[2],pt[3],pt[6],pt[7]); // top plane
