@@ -49,8 +49,8 @@ static Ref_t create_detector(Detector &description, xml_h e, SensitiveDetector /
   xml_det_t   x_tank   = x_det.child(_Unicode(tank));
   xml_det_t   x_stave  = x_det.child(_Unicode(stave));
   xml_det_t   x_tower  = x_det.child(_Unicode(tower));
-  xml_det_t   x_capillary_S  = x_det.child(_Unicode(tube_S));
-  xml_det_t   x_capillary_C  = x_det.child(_Unicode(tube_C));
+  xml_det_t   x_capillary_S = x_det.child(_Unicode(tube_S));
+  xml_det_t   x_capillary_C = x_det.child(_Unicode(tube_C));
   const double tubeRadius = x_capillary_S.outer_radius();
   std::cout<<", tube radius "<<tubeRadius/mm<<" mm"<<std::endl;
 
@@ -121,16 +121,15 @@ static Ref_t create_detector(Detector &description, xml_h e, SensitiveDetector /
     phiERPlaced.addPhysVolID("phiERPlace",j);
   } // end of slice/stave placement
 
-  // Create a brass tube
-  //const double tubeRadius = 2.0*mm;
-  Tube capillary(0.*mm, tubeRadius, tower_height/2., 2*M_PI);
-  Volume capillaryLog("capillaryLog",capillary,description.material(x_tank.attr<std::string>(_U(material))));
-  capillaryLog.setVisAttributes(description, x_capillary_S.visStr());
+  // Create an S tube with full tower length
+  Tube capillary_S(0.*mm, tubeRadius, tower_height/2., 2*M_PI);
+  Volume capillary_SLog("capillary_SLog",capillary_S,description.material(x_capillary_S.attr<std::string>(_U(material))));
+  capillary_SLog.setVisAttributes(description, x_capillary_S.visStr());
 
-  // Create a tube for C fibers
+  // Create a C tube with full tower length
   Tube capillary_C(0.*mm, tubeRadius, tower_height/2., 2*M_PI);
-  Volume capillaryLog_C("capillaryLog_C",capillary_C,description.material(x_tank.attr<std::string>(_U(material))));
-  capillaryLog_C.setVisAttributes(description, x_capillary_C.visStr());
+  Volume capillary_CLog("capillary_CLog",capillary_C,description.material(x_capillary_C.attr<std::string>(_U(material))));
+  capillary_CLog.setVisAttributes(description, x_capillary_C.visStr());
 
   // Build the towers inside and endcap R slice
   //
@@ -276,7 +275,7 @@ static Ref_t create_detector(Detector &description, xml_h e, SensitiveDetector /
          auto capillaryLength = Helper.GetTubeLength(pt,capillaryPos);
          //std::cout<<" my x y "<<x_tube<<" "<<y_tube<<" length "<<capillaryLength<<std::endl;
          if(capillaryLength == length){
-           PlacedVolume capillaryPlaced = towerLog.placeVolume(capillaryLog, 1000*k+j, Position(x_tube, y_tube, 0.));
+           PlacedVolume capillaryPlaced = towerLog.placeVolume(capillary_SLog, 1000*k+j, Position(x_tube, y_tube, 0.));
          }
          else{
            // Note: the root visualizer does not display tubes with capillaryLength < 4.5 cm.
@@ -308,7 +307,7 @@ static Ref_t create_detector(Detector &description, xml_h e, SensitiveDetector /
            auto capillaryLength_C = Helper.GetTubeLength(pt,capillaryPos_C);
            //std::cout<<"capillary length c "<<capillaryLength_C<<std::endl;
            if(capillaryLength_C == length){
-             PlacedVolume capillaryPlaced_C = towerLog.placeVolume(capillaryLog_C, 100000*k+j, Position(x_tube_C, y_tube_C, 0.));
+             PlacedVolume capillaryPlaced_C = towerLog.placeVolume(capillary_CLog, 100000*k+j, Position(x_tube_C, y_tube_C, 0.));
            } 
            else{
              if (capillaryLength_C > 5.0*cm){
