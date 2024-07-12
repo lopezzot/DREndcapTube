@@ -25,87 +25,8 @@ using namespace dd4hep;
 using namespace dd4hep::detail;
 using namespace dd4hep::rec;
 
-// This struct represents a plane given the 4 vertices
-struct Plane{
-  Vector3D P1,P2,P3,P4;
-  Plane(Vector3D P1, Vector3D P2, Vector3D P3, Vector3D P4) : P1(P1),P2(P2),P3(P3),P4(P4){};
-};
-
-// This struct represents a Zline given a point and a fixed direction
-struct ZLine{
-  Vector3D origin;
-  Vector3D fuZ = Vector3D(0,0,-1);
-  ZLine(Vector3D P) : origin(P){};
-};
-
-// Function to calculate the intersection of a Zline with a plane
-bool intersectLinePlane(const ZLine& line, const Plane& plane, Vector3D& intersection) {
-    Vector3D p0 = plane.P1;
-    Vector3D p1 = plane.P2;
-    Vector3D p2 = plane.P3;
-
-    // Compute the plane normal
-    Vector3D u = Vector3D(p1.x() - p0.x(), p1.y() - p0.y(), p1.z() - p0.z());
-    Vector3D v = Vector3D(p2.x() - p0.x(), p2.y() - p0.y(), p2.z() - p0.z());
-    Vector3D normal = Vector3D(u.y() * v.z() - u.z() * v.y(), u.z() * v.x() - u.x() * v.z(), u.x() * v.y() - u.y() * v.x());
-
-    double denominator = normal.x() * line.fuZ.x() + normal.y() * line.fuZ.y() + normal.z() * line.fuZ.z();
-
-    if (std::fabs(denominator) < 1e-6) {
-        return false; // The line is parallel to the plane
-    }
-
-    double d = normal.x() * p0.x() + normal.y() * p0.y() + normal.z() * p0.z();
-    double t = (d - normal.x() * line.origin.x() - normal.y() * line.origin.y() - normal.z() * line.origin.z()) / denominator;
-
-    if (t < 0) {
-        return false; // The intersection is behind the line origin
-    }
-
-    intersection = Vector3D(line.origin.x() + t * line.fuZ.x(),
-                            line.origin.y() + t * line.fuZ.y(),
-                            line.origin.z() + t * line.fuZ.z());
-
-    return true;
-};
-
-// Function to calculate fiber length
-double GetFiberLength(const Vector3D (&pt)[8], const Vector3D& point){
-    Plane FirstPlane(pt[0],pt[1],pt[2],pt[3]);
-    Plane SecondPlane(pt[1],pt[5],pt[3],pt[7]);
-    Plane ThirdPlane(pt[2],pt[3],pt[6],pt[7]);
-    Plane FourthPlane(pt[0],pt[4],pt[2],pt[6]);
-    Plane FifthPlane(pt[0],pt[1],pt[5],pt[4]);
-    std::array<Plane, 5> Planes{FirstPlane, SecondPlane, ThirdPlane, FourthPlane, FifthPlane};
-    // I calculate the intersection over four line (up, down, left, right) of the capillary
-    ZLine PointZLine(point);
-    ZLine UpPointZLine(Vector3D(point.x(),point.y()+2.0*mm,point.z()));
-    ZLine DownPointZLine(Vector3D(point.x(),point.y()-2.0*mm,point.z()));
-    ZLine LeftPointZLine(Vector3D(point.x()-2.0*mm,point.y(),point.z()));
-    ZLine RightPointZLine(Vector3D(point.x()+2.0*mm,point.y(),point.z()));
-    std::array<ZLine, 4> Lines{UpPointZLine, DownPointZLine, LeftPointZLine, RightPointZLine};
-    // Intersection to be found
-    Vector3D intersection;
-    double FiberLength = 0.;
-    int side = 99.; //which capillary side intersected first
-    for(std::size_t k=0; k<Lines.size(); k++){
-      for(std::size_t i=0; i<Planes.size(); i++){
-        auto truth = intersectLinePlane(Lines.at(k), Planes.at(i), intersection);
-        //auto truth = intersectLinePlane(PointZLine, Planes.at(i), intersection);
-        double FiberLengthPlane = (Lines.at(k).origin-intersection).r();
-        //double FiberLengthPlane = (point-intersection).r();
-        //std::cout<<"Plane "<<i<<" FiberLengthPlane "<<FiberLengthPlane<<std::endl;
-        if(k==0 && i==0) FiberLength = FiberLengthPlane;
-        else if (FiberLength > FiberLengthPlane) FiberLength = FiberLengthPlane;
-        else {;} 
-        //std::cout<<"k "<<k<<" i "<<i<<" "<<FiberLength<<std::endl;
-      }
-    }
-    //std::cout<<"point "<<point.x()<<" "<<point.y()<<" final fiber length "<<FiberLength<<std::endl;
-    return FiberLength;
-}
-
-// A sphere a air inside a box of water
+// Create the endcap calorimeter
+//
 static Ref_t create_detector(Detector &description, xml_h e, SensitiveDetector /* sens */)  {
 
   std::cout<<"--> MyDetector::create_detector() start"<<std::endl;
@@ -148,6 +69,8 @@ static Ref_t create_detector(Detector &description, xml_h e, SensitiveDetector /
   Helper.SetInnerR(innerR);
   Helper.SetTower_height(tower_height);
   Helper.SetNumZRot(NbOfZRot);
+  const double tubeRadius = 2.0*mm;
+  Helper.SetTubeRadius(tubeRadius);
 
   dd4hep::rec::Vector3D pt[8]; // dummy inizialization of pt
 
@@ -207,7 +130,7 @@ static Ref_t create_detector(Detector &description, xml_h e, SensitiveDetector /
   }
 
   // Create a brass tube
-  const double tubeRadius = 2.0*mm;
+  //const double tubeRadius = 2.0*mm;
   Tube capillary(0.*mm, tubeRadius, tower_height/2., 2*M_PI);
   Volume capillaryLog("capillaryLog",capillary,description.material(x_tank.attr<std::string>(_U(material))));
   capillaryLog.setVisAttributes(description, x_capillary.visStr());
@@ -358,7 +281,7 @@ static Ref_t create_detector(Detector &description, xml_h e, SensitiveDetector /
       for(std::size_t j=0;j<1000;j++){
          auto x_tube = x_start  + tubeRadius + j*(tubeDiameter); 
          Vector3D capillaryPos(x_tube, y_tube, length/2.);
-         auto capillaryLength = GetFiberLength(pt,capillaryPos);
+         auto capillaryLength = Helper.GetFiberLength(pt,capillaryPos);
          //std::cout<<" my x y "<<x_tube<<" "<<y_tube<<" length "<<capillaryLength<<std::endl;
          if(capillaryLength == length){
            PlacedVolume capillaryPlaced = towerLog.placeVolume(capillaryLog, 1000*k+j, Position(x_tube, y_tube, 0.));
@@ -390,7 +313,7 @@ static Ref_t create_detector(Detector &description, xml_h e, SensitiveDetector /
            std::cout<<"Cher "<<x_tube<<" "<<x_tube_C<<std::endl;
            double y_tube_C = y_tube + y_pitch; 
            Vector3D capillaryPos_C(x_tube_C, y_tube_C, length/2.);
-           auto capillaryLength_C = GetFiberLength(pt,capillaryPos_C);
+           auto capillaryLength_C = Helper.GetFiberLength(pt,capillaryPos_C);
            std::cout<<"capillary length c "<<capillaryLength_C<<std::endl;
            if(capillaryLength_C == length){
              PlacedVolume capillaryPlaced_C = towerLog.placeVolume(capillaryLog_C, 100000*k+j, Position(x_tube_C, y_tube_C, 0.));

@@ -13,6 +13,34 @@
 #include "DDRec/Vector3D.h"
 
 using namespace dd4hep;
+using namespace dd4hep::rec; // for dd4hep::rec::Vector3D
+
+// This struct represents a plane corresponding to a tower's face.
+// I construct it with the 4 edges (points) of the tower's face,
+// however only 3 points will be used to define the plane.
+struct Plane{
+  Vector3D P1,P2,P3,P4;
+  Plane(Vector3D P1, Vector3D P2, Vector3D P3, Vector3D P4) : P1(P1),P2(P2),P3(P3),P4(P4){};
+};
+
+// This struct represents a line towards negatize Z
+// given its starting point (origin).
+// The starting points will be distributed over the back face
+// of the a tower. The corresponding lines will be used to find
+// the intersection with the tower's faces.
+struct ZLine{
+  Vector3D origin;
+  Vector3D fuZ = Vector3D(0,0,-1);
+  ZLine(Vector3D P) : origin(P){};
+};
+
+// Custom exception class for intersecting ZLines with Planes
+class IntersectException : public std::exception {
+  public:
+    const char* what() const noexcept override {
+        return "IntersectLinePlane: Invalid intersection of ZLine with a Plane";
+    }
+};
 
 class DREndcapTubeHelper {
 
@@ -44,6 +72,7 @@ class DREndcapTubeHelper {
     double finnerR_new2;
     double Ratio;
     double Ratio2;
+    double fTubeRadius;
  
   public: 
     // Methods to initialize class parameters
@@ -56,6 +85,7 @@ class DREndcapTubeHelper {
     void SetDeltaTheta2(double theta) { fdeltatheta2 = theta; }
     void SetThetaOfCenter2(double theta) { fthetaofcenter2 = theta; }
     void SetPMTT(double PMTT) { fPMTT = PMTT; }
+    void SetTubeRadius(double tubeRadius) { fTubeRadius = tubeRadius; }
 
     void CalBasic();
     /*
@@ -70,14 +100,14 @@ class DREndcapTubeHelper {
     */
     dd4hep::rec::Vector3D GetOrigin(int i);
     void Getpt(dd4hep::rec::Vector3D *pt);
-		
-    /*G4ThreeVector GetOrigin_PMTG(G4int i);
-    void Getpt_PMTG(G4ThreeVector *pt);
 
-    void Getpt_PMTCath(G4ThreeVector *pt);
-
-    G4RotationMatrix* GetRM(G4int i);
-    */
+    // Methods to calculate tubes lengths
+    //
+    // This method finds the "intersection" between a ZLine (tube) and a Plane (tower face)
+    void IntersectLinePlane(const ZLine& line, const Plane& plane, Vector3D& intersection);
+    // This method calculates a tube length given the cylindrical structure of the tube
+    // and each tower face
+    double GetFiberLength(const Vector3D (&pt)[8], const Vector3D& point);
 };
 
 inline void DREndcapTubeHelper::CalBasic(){
@@ -207,6 +237,76 @@ inline dd4hep::rec::Vector3D DREndcapTubeHelper::GetOrigin(int i){
 		}
 	}
 }
+
+// This method finds the "intersection" between a ZLine (tube) and a Plane (tower face).
+// Only the first 3 points of the plane and needed to define the plane.
+// The "intersection" is updated with the Vector3D at the intersection found.
+// Exceptions are handled by this function if the line is parallel to the plane or the
+// intersection is behind the line origin, i.e. below the backface of the tower.
+// Both cases are to be considered errors.
+inline void DREndcapTubeHelper::IntersectLinePlane(const ZLine& line, const Plane& plane, Vector3D& intersection) {
+    Vector3D p0 = plane.P1;
+    Vector3D p1 = plane.P2;
+    Vector3D p2 = plane.P3;
+
+    // Compute the plane normal
+    Vector3D u = Vector3D(p1.x() - p0.x(), p1.y() - p0.y(), p1.z() - p0.z());
+    Vector3D v = Vector3D(p2.x() - p0.x(), p2.y() - p0.y(), p2.z() - p0.z());
+    Vector3D normal = Vector3D(u.y() * v.z() - u.z() * v.y(), u.z() * v.x() - u.x() * v.z(), u.x() * v.y() - u.y() * v.x());
+
+    double denominator = normal.x() * line.fuZ.x() + normal.y() * line.fuZ.y() + normal.z() * line.fuZ.z();
+
+    if (std::fabs(denominator) < 1e-6) {
+        throw IntersectException(); // The line is parallel to the plane
+    }
+
+    double d = normal.x() * p0.x() + normal.y() * p0.y() + normal.z() * p0.z();
+    double t = (d - normal.x() * line.origin.x() - normal.y() * line.origin.y() - normal.z() * line.origin.z()) / denominator;
+
+    if (t < 0) {
+        throw IntersectException(); // The intersection is behind the line origin
+    }
+
+    intersection = Vector3D(line.origin.x() + t * line.fuZ.x(),
+                            line.origin.y() + t * line.fuZ.y(),
+                            line.origin.z() + t * line.fuZ.z());
+};
+
+// This method calculates a tube length given the cylindrical structure of the tube
+// and each tower face.
+// The intersection is calculated over 5 planes (tower front, up, down, left and right faces).
+// For each plane the intersection is calculated over four points on the tube surface (up, down, left, right).
+// The shortest intersection is the one to be used.
+inline double DREndcapTubeHelper::GetFiberLength(const Vector3D (&pt)[8], const Vector3D& point){
+    Plane FirstPlane(pt[0],pt[1],pt[2],pt[3]); // front plane (smallest one)
+    Plane SecondPlane(pt[1],pt[5],pt[3],pt[7]);// right plane (looking at the front face)
+    Plane ThirdPlane(pt[2],pt[3],pt[6],pt[7]); // top plane
+    Plane FourthPlane(pt[0],pt[4],pt[2],pt[6]);// left plane
+    Plane FifthPlane(pt[0],pt[1],pt[5],pt[4]); // bottom plane
+    std::array<Plane, 5> Planes{FirstPlane, SecondPlane, ThirdPlane, FourthPlane, FifthPlane};
+
+    ZLine PointZLine(point); // Axis of the tube with origin on tower back plane
+    ZLine UpPointZLine(Vector3D(point.x(),point.y()+fTubeRadius,point.z()));
+    ZLine DownPointZLine(Vector3D(point.x(),point.y()-fTubeRadius,point.z()));
+    ZLine LeftPointZLine(Vector3D(point.x()-fTubeRadius,point.y(),point.z()));
+    ZLine RightPointZLine(Vector3D(point.x()+fTubeRadius,point.y(),point.z()));
+    std::array<ZLine, 4> Lines{UpPointZLine, DownPointZLine, LeftPointZLine, RightPointZLine};
+
+    Vector3D intersection; // intersection to be found
+    double tubeLength{0.};// tube length to be returned
+
+    for(std::size_t k=0; k<Lines.size(); k++){    // loop over cylinder surface points
+      for(std::size_t i=0; i<Planes.size(); i++){ // loop over tower's planes
+        IntersectLinePlane(Lines.at(k), Planes.at(i), intersection);
+        double fiberLengthPlane = (Lines.at(k).origin-intersection).r();
+        if(k==0 && i==0) tubeLength = fiberLengthPlane;
+        else if (tubeLength > fiberLengthPlane) tubeLength = fiberLengthPlane;
+        else {;} 
+      } // end of loop over tower's planes
+    } // end of loop over cylinder surface points
+
+    return tubeLength;
+};
 
 #endif // DREndcapTube_H
 
