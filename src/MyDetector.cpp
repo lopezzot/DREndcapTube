@@ -1,21 +1,18 @@
-// -------------------------------------------------------------------------
-// File: MyDetector.cpp
-//
-// Purpose: C++ implementation of a very simple dd4hep detector MyDetector:
-// a sphere of air inside a box of water
-//
-// Author: Lorenzo Pezzotti, wildly using dd4hep examples
-//
-// Created: 2/5/2024
-// -------------------------------------------------------------------------
+//**************************************************************************
+// \file MyDetector.cpp
+// \brief: Implementation of the endcap geometry of the IDEA dual-readout
+//         calorimeter using the capillary tubes technology
+// \author: Lorenzo Pezzotti (CERN) @lopezzot
+// \start date: 12 July 2024
+//**************************************************************************
 
-// Include files
+// Includers from DD4hep
 #include <DD4hep/DetFactoryHelper.h>
 #include <DD4hep/OpticalSurfaces.h>
 #include <DD4hep/Printout.h>
 #include <DD4hep/Detector.h>
 
-// C/C++ include files
+// Includers from stl
 #include <iostream>
 #include <map>
 #include <cmath>
@@ -465,3 +462,5 @@ static Ref_t create_detector(Detector &description, xml_h e, SensitiveDetector /
 }
 
 DECLARE_DETELEMENT(DD4hep_MyDetector,create_detector)
+
+//**************************************************************************

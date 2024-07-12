@@ -1,7 +1,16 @@
+//**************************************************************************
+// \file DREndcapTube.hh
+// \brief: Auxiliary class to handle complex computations for the IDEA
+//         dual-readout calorimeter with the capillary tubes technology
+// \author: Lorenzo Pezzotti (CERN) @lopezzot
+// \start date: 12 July 2024
+//**************************************************************************
+
 #ifndef DREndcapTube_H
 #define DREndcapTube_H
 
-#include "DDRec/Vector3D.h" // Used for dd4hep::rec::Vector3D
+// Includers from DD4hep
+#include "DDRec/Vector3D.h"
 
 using namespace dd4hep;
 
@@ -200,3 +209,5 @@ inline dd4hep::rec::Vector3D DREndcapTubeHelper::GetOrigin(int i){
 }
 
 #endif // DREndcapTube_H
+
+//**************************************************************************

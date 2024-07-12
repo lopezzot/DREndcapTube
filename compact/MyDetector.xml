@@ -1,15 +1,11 @@
 <lccdd>
-<!--
-#==========================================================================
-# File: MyDetector.xml
-#
-# Purpose: A simple xml file to create MyDetector: a sphere or air
-# inside a box of water
-#
-# Author: Lorenzo Pezzotti, wildly using dd4hep examples
-#
-# Created: 2/5/2024
-#==========================================================================
+<!-- #==========================================================================
+     # File: MyDetector.xml
+     # Brief: XML description file for the endcap geometry of the IDEA
+     #        dual-readout calorimeter with the capillary tubes technology
+     # Author: Lorenzo Pezzotti (CERN) @lopezzot
+     # Created: 12/7/2024
+     #==========================================================================
 -->
 
 <!-- #==========================================================================
