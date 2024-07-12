@@ -67,7 +67,7 @@ static Ref_t create_detector(Detector &description, xml_h e, SensitiveDetector /
   // Create helper class
   DREndcapTubeHelper Helper;
   Helper.SetInnerR(innerR);
-  Helper.SetTower_height(tower_height);
+  Helper.SetTowerHeight(tower_height);
   Helper.SetNumZRot(NbOfZRot);
   const double tubeRadius = 2.0*mm;
   Helper.SetTubeRadius(tubeRadius);
@@ -142,7 +142,7 @@ static Ref_t create_detector(Detector &description, xml_h e, SensitiveDetector /
 
   // Build the towers inside and endcap R slice
   //
-  Helper.Rbool(1);
+  Helper.SetRbool(1);
   double thetaofcenter = 0.; // theta angle to center of tower being constructed
   double thetaofcenter2 = 0.; // theta angle to center of next tower
   double deltatheta_endcap[40] = {0.};

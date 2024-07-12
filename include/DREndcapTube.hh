@@ -51,55 +51,48 @@ class DREndcapTubeHelper {
 
   private:
     // Class fields
-    double fPhiZRot;
-    bool fRbool;
-    bool fcalbasicbool;
-    double finnerR;
-    double ftower_height;
-    double fnumzrot;
-    double fdeltatheta;
-    double fthetaofcenter;
+    //
+    // Fields to be set
+    double fTubeRadius;    // Radius of tubes (same for Scin and Cher)
+    double fPhiZRot;       // tower phi dimension
+    bool fRbool;           // set to true to build right endcap
+    bool fCalBasicBool;    // has CalBasic already being called?
+    double fInnerR;        // inner radius at theta = 0. rad
+    double fTowerHeight;   // tower height/length
+    double fNumZRot;       // number of rotations around Z axis
+    double fDeltaTheta;    // theta dimension of current tower
+    double fDeltaTheta2;   // theta dimension of next tower
+    double fThetaOfCenter; // theta angle pointing to center of current tower
+    double fThetaOfCenter2;// theta angle pointing to center of next tower
+    // Fields to be computed
     double finnerR_new;
-    double fTrns_Length;
-    dd4hep::rec::Vector3D fTrns_Vector;
-    dd4hep::rec::Vector3D fV1;
-    dd4hep::rec::Vector3D fV2;
-    dd4hep::rec::Vector3D fV3;
-    dd4hep::rec::Vector3D fV4;
-    double fPMTT;
-    double fthetaofcenter2;
-    double fdeltatheta2;
     double finnerR_new2;
+    double fTrns_Length;
+    Vector3D fTrns_Vector;
+    Vector3D fV1;
+    Vector3D fV2;
+    Vector3D fV3;
+    Vector3D fV4;
     double Ratio;
     double Ratio2;
-    double fTubeRadius;
  
   public: 
-    // Methods to initialize class parameters
-    void Rbool(bool Rbool) { fRbool = Rbool; } // set to True if building right endcap
-    void SetInnerR(double innerR) { finnerR = innerR; }
-    void SetTower_height(double tower_height) { ftower_height = tower_height; }
-    void SetNumZRot(int num) { fnumzrot = num; fPhiZRot = 2*M_PI/(double)num; }
-    void SetDeltaTheta(double theta) { fdeltatheta = theta; }
-    void SetThetaOfCenter(double theta) { fthetaofcenter = theta; }
-    void SetDeltaTheta2(double theta) { fdeltatheta2 = theta; }
-    void SetThetaOfCenter2(double theta) { fthetaofcenter2 = theta; }
-    void SetPMTT(double PMTT) { fPMTT = PMTT; }
+    // Methods to set class fields
+    void SetRbool(bool rBool) { fRbool = rBool; } // set to True if building right endcap
+    void SetInnerR(double innerR) { fInnerR = innerR; }
+    void SetTowerHeight(double towerHeight) { fTowerHeight = towerHeight; }
+    void SetNumZRot(int num) { fNumZRot = num; fPhiZRot = 2*M_PI/(double)num; }
+    void SetDeltaTheta(double theta) { fDeltaTheta = theta; }
+    void SetThetaOfCenter(double theta) { fThetaOfCenter = theta; }
+    void SetDeltaTheta2(double theta) { fDeltaTheta2 = theta; }
+    void SetThetaOfCenter2(double theta) { fThetaOfCenter2 = theta; }
     void SetTubeRadius(double tubeRadius) { fTubeRadius = tubeRadius; }
 
+    // Methods to calculate towers parameters
+    //
     void CalBasic();
-    /*
-    // Methods to get class parameters
-    G4double GetInnerR_new();
-    G4double GetTrns_Length();
-    G4ThreeVector GetTrns_Vector();
-    G4ThreeVector GetV1();
-    G4ThreeVector GetV2();
-    G4ThreeVector GetV3();
-    G4ThreeVector GetV4();
-    */
-    dd4hep::rec::Vector3D GetOrigin(int i);
-    void Getpt(dd4hep::rec::Vector3D *pt);
+    Vector3D GetOrigin(int i);
+    void Getpt(Vector3D *pt);
 
     // Methods to calculate tubes lengths
     //
@@ -112,95 +105,95 @@ class DREndcapTubeHelper {
 
 inline void DREndcapTubeHelper::CalBasic(){
 
-    fcalbasicbool = 1;
+    fCalBasicBool = 1;
     
     // distance from center to front face of first tower
     // radius is 2500 mm which is same as distance from center to front face of very
     // last tower.
     // To get distance to first tower I divide this radius by cosine of first tower.
     // To understand impact of sin*tan part
-    finnerR_new = finnerR/(cos(fthetaofcenter)-sin(fthetaofcenter)*tan(fdeltatheta/2.));
+    finnerR_new = fInnerR/(cos(fThetaOfCenter)-sin(fThetaOfCenter)*tan(fDeltaTheta/2.));
     // distance from center to front face of second tower (same as above)
-    finnerR_new2 = finnerR/(cos(fthetaofcenter2)-sin(fthetaofcenter2)*tan(fdeltatheta2/2.));
+    finnerR_new2 = fInnerR/(cos(fThetaOfCenter2)-sin(fThetaOfCenter2)*tan(fDeltaTheta2/2.));
     
     // Half size at front face of first tower given by effective radius times tan of half delta
-    double innerSide_half = finnerR_new*tan(fdeltatheta/2.);
+    double innerSide_half = finnerR_new*tan(fDeltaTheta/2.);
     // Half size at back face
-    double outerSide_half = (finnerR_new+ftower_height)*tan(fdeltatheta/2.);	
+    double outerSide_half = (finnerR_new+fTowerHeight)*tan(fDeltaTheta/2.);	
     
     // Half size at front face of second tower (same as above)
-    double innerSide_half2 = finnerR_new2*tan(fdeltatheta2/2.);
+    double innerSide_half2 = finnerR_new2*tan(fDeltaTheta2/2.);
 
     // Distance from origin to center of first tower
-    fTrns_Length = ftower_height/2.+finnerR_new;
+    fTrns_Length = fTowerHeight/2.+finnerR_new;
 	
     // Vector from origin to center of first tower
     // Remember towers are placed starting from the one laying on the x-axis 
-    fTrns_Vector = dd4hep::rec::Vector3D(cos(fthetaofcenter)*fTrns_Length,0,sin(fthetaofcenter)*fTrns_Length);
+    fTrns_Vector = dd4hep::rec::Vector3D(cos(fThetaOfCenter)*fTrns_Length,0,sin(fThetaOfCenter)*fTrns_Length);
     
-    double dx1=finnerR; // inner radius hardcoded in detector construction
-    double dxi=sin(fthetaofcenter)*finnerR_new+innerSide_half*cos(fthetaofcenter);
-    double dxi2=sin(fthetaofcenter2)*finnerR_new2+innerSide_half2*cos(fthetaofcenter2);
+    double dx1=fInnerR; // inner radius hardcoded in detector construction
+    double dxi=sin(fThetaOfCenter)*finnerR_new+innerSide_half*cos(fThetaOfCenter);
+    double dxi2=sin(fThetaOfCenter2)*finnerR_new2+innerSide_half2*cos(fThetaOfCenter2);
     Ratio=dxi/dx1;
     Ratio2=dxi2/dx1;
     std::cout<<"finnerR_new "<<finnerR_new/dd4hep::mm<<" innerSide_half "<<innerSide_half/dd4hep::mm<<" Ratio: "<<Ratio<<std::endl;
 
     // This vector are distributed over the plane of the tower closest to the barrel
-    // The difference between fV1 and fV2 (fV3 and fV4) is the correction of finnerR_new+ftower_height that meake the vector start at the begin and end of the tower surface
+    // The difference between fV1 and fV2 (fV3 and fV4) is the correction of finnerR_new+fTowerHeight that meake the vector start at the begin and end of the tower surface
     fV1 = dd4hep::rec::Vector3D(
-			(Ratio2)*(cos(fthetaofcenter)*finnerR_new+sin(fthetaofcenter)*finnerR_new*tan(fdeltatheta/2.)),
+			(Ratio2)*(cos(fThetaOfCenter)*finnerR_new+sin(fThetaOfCenter)*finnerR_new*tan(fDeltaTheta/2.)),
 			0,
-			sin(fthetaofcenter)*finnerR_new-sin(fthetaofcenter)*finnerR_new*tan(fdeltatheta/2.)
+			sin(fThetaOfCenter)*finnerR_new-sin(fThetaOfCenter)*finnerR_new*tan(fDeltaTheta/2.)
 			);
         
     std::cout<<fV1.x()/mm<<" "<<fV1.y()/mm<<" "<<fV1.z()/mm<<" fV1"<<std::endl;        
     fV2 = dd4hep::rec::Vector3D(
-			(Ratio2)*(cos(fthetaofcenter)*(finnerR_new+ftower_height)+sin(fthetaofcenter)*(finnerR_new+ftower_height)*tan(fdeltatheta/2.)),
+			(Ratio2)*(cos(fThetaOfCenter)*(finnerR_new+fTowerHeight)+sin(fThetaOfCenter)*(finnerR_new+fTowerHeight)*tan(fDeltaTheta/2.)),
 			0,
-			sin(fthetaofcenter)*(finnerR_new+ftower_height)-sin(fthetaofcenter)*(finnerR_new+ftower_height)*tan(fdeltatheta/2.)
+			sin(fThetaOfCenter)*(finnerR_new+fTowerHeight)-sin(fThetaOfCenter)*(finnerR_new+fTowerHeight)*tan(fDeltaTheta/2.)
 			);
 
     std::cout<<fV2.x()/mm<<" "<<fV2.y()/mm<<" "<<fV2.z()/mm<<" fV2"<<std::endl;        
     fV3 = dd4hep::rec::Vector3D(
-			(Ratio)*(cos(fthetaofcenter)*finnerR_new-sin(fthetaofcenter)*finnerR_new*tan(fdeltatheta/2.)),
+			(Ratio)*(cos(fThetaOfCenter)*finnerR_new-sin(fThetaOfCenter)*finnerR_new*tan(fDeltaTheta/2.)),
 			0,
-			sin(fthetaofcenter)*finnerR_new+sin(fthetaofcenter)*finnerR_new*tan(fdeltatheta/2.)
+			sin(fThetaOfCenter)*finnerR_new+sin(fThetaOfCenter)*finnerR_new*tan(fDeltaTheta/2.)
 			);
 	
     std::cout<<fV3.x()/mm<<" "<<fV3.y()/mm<<" "<<fV3.z()/mm<<" fV3"<<std::endl;        
     fV4 = dd4hep::rec::Vector3D(
-			(Ratio)*(cos(fthetaofcenter)*(finnerR_new+ftower_height)-sin(fthetaofcenter)*(finnerR_new+ftower_height)*tan(fdeltatheta/2.)),
+			(Ratio)*(cos(fThetaOfCenter)*(finnerR_new+fTowerHeight)-sin(fThetaOfCenter)*(finnerR_new+fTowerHeight)*tan(fDeltaTheta/2.)),
 			0,
-			sin(fthetaofcenter)*(finnerR_new+ftower_height)+sin(fthetaofcenter)*(finnerR_new+ftower_height)*tan(fdeltatheta/2.)
+			sin(fThetaOfCenter)*(finnerR_new+fTowerHeight)+sin(fThetaOfCenter)*(finnerR_new+fTowerHeight)*tan(fDeltaTheta/2.)
 			);
     std::cout<<fV4.x()/mm<<" "<<fV4.y()/mm<<" "<<fV4.z()/mm<<" fV4"<<std::endl;        
 
 }
 
 inline void DREndcapTubeHelper::Getpt(dd4hep::rec::Vector3D *pt) {
-	double innerSide_half = finnerR_new*tan(fdeltatheta/2.);
-	double outerSide_half= (finnerR_new+ftower_height)*tan(fdeltatheta/2.);
+	double innerSide_half = finnerR_new*tan(fDeltaTheta/2.);
+	double outerSide_half= (finnerR_new+fTowerHeight)*tan(fDeltaTheta/2.);
 
 	if(fRbool == 1){
-		pt[0]=dd4hep::rec::Vector3D(-(fV1.x()*tan(fPhiZRot/2.)),-innerSide_half,-ftower_height/2.);
-		pt[1]=dd4hep::rec::Vector3D((fV1.x()*tan(fPhiZRot/2.)),-innerSide_half,-ftower_height/2.);
-		pt[2]=dd4hep::rec::Vector3D(-(fV3.x()*tan(fPhiZRot/2.)),innerSide_half,-ftower_height/2.);
-		pt[3]=dd4hep::rec::Vector3D((fV3.x()*tan(fPhiZRot/2.)),innerSide_half,-ftower_height/2.);
-		pt[4]=dd4hep::rec::Vector3D(-(fV2.x()*tan(fPhiZRot/2.)),-outerSide_half,ftower_height/2.);
-		pt[5]=dd4hep::rec::Vector3D((fV2.x()*tan(fPhiZRot/2.)),-outerSide_half,ftower_height/2.);
-		pt[6]=dd4hep::rec::Vector3D(-(fV4.x()*tan(fPhiZRot/2.)),outerSide_half,ftower_height/2.);
-		pt[7]=dd4hep::rec::Vector3D((fV4.x()*tan(fPhiZRot/2.)),outerSide_half,ftower_height/2.);
+		pt[0]=dd4hep::rec::Vector3D(-(fV1.x()*tan(fPhiZRot/2.)),-innerSide_half,-fTowerHeight/2.);
+		pt[1]=dd4hep::rec::Vector3D((fV1.x()*tan(fPhiZRot/2.)),-innerSide_half,-fTowerHeight/2.);
+		pt[2]=dd4hep::rec::Vector3D(-(fV3.x()*tan(fPhiZRot/2.)),innerSide_half,-fTowerHeight/2.);
+		pt[3]=dd4hep::rec::Vector3D((fV3.x()*tan(fPhiZRot/2.)),innerSide_half,-fTowerHeight/2.);
+		pt[4]=dd4hep::rec::Vector3D(-(fV2.x()*tan(fPhiZRot/2.)),-outerSide_half,fTowerHeight/2.);
+		pt[5]=dd4hep::rec::Vector3D((fV2.x()*tan(fPhiZRot/2.)),-outerSide_half,fTowerHeight/2.);
+		pt[6]=dd4hep::rec::Vector3D(-(fV4.x()*tan(fPhiZRot/2.)),outerSide_half,fTowerHeight/2.);
+		pt[7]=dd4hep::rec::Vector3D((fV4.x()*tan(fPhiZRot/2.)),outerSide_half,fTowerHeight/2.);
 	}
 
 	else{
-		pt[0]=dd4hep::rec::Vector3D(-(fV1.x()*tan(fPhiZRot/2.)),-innerSide_half,-ftower_height/2.);
-		pt[1]=dd4hep::rec::Vector3D((fV1.x()*tan(fPhiZRot/2.)),-innerSide_half,-ftower_height/2.);
-		pt[2]=dd4hep::rec::Vector3D(-(fV3.x()*tan(fPhiZRot/2.)),innerSide_half,-ftower_height/2.);
-		pt[3]=dd4hep::rec::Vector3D((fV3.x()*tan(fPhiZRot/2.)),innerSide_half,-ftower_height/2.);
-		pt[4]=dd4hep::rec::Vector3D(-(fV2.x()*tan(fPhiZRot/2.)),-outerSide_half,ftower_height/2.);
-		pt[5]=dd4hep::rec::Vector3D((fV2.x()*tan(fPhiZRot/2.)),-outerSide_half,ftower_height/2.);
-		pt[6]=dd4hep::rec::Vector3D(-(fV4.x()*tan(fPhiZRot/2.)),outerSide_half,ftower_height/2.);
-		pt[7]=dd4hep::rec::Vector3D((fV4.x()*tan(fPhiZRot/2.)),outerSide_half,ftower_height/2.);
+		pt[0]=dd4hep::rec::Vector3D(-(fV1.x()*tan(fPhiZRot/2.)),-innerSide_half,-fTowerHeight/2.);
+		pt[1]=dd4hep::rec::Vector3D((fV1.x()*tan(fPhiZRot/2.)),-innerSide_half,-fTowerHeight/2.);
+		pt[2]=dd4hep::rec::Vector3D(-(fV3.x()*tan(fPhiZRot/2.)),innerSide_half,-fTowerHeight/2.);
+		pt[3]=dd4hep::rec::Vector3D((fV3.x()*tan(fPhiZRot/2.)),innerSide_half,-fTowerHeight/2.);
+		pt[4]=dd4hep::rec::Vector3D(-(fV2.x()*tan(fPhiZRot/2.)),-outerSide_half,fTowerHeight/2.);
+		pt[5]=dd4hep::rec::Vector3D((fV2.x()*tan(fPhiZRot/2.)),-outerSide_half,fTowerHeight/2.);
+		pt[6]=dd4hep::rec::Vector3D(-(fV4.x()*tan(fPhiZRot/2.)),outerSide_half,fTowerHeight/2.);
+		pt[7]=dd4hep::rec::Vector3D((fV4.x()*tan(fPhiZRot/2.)),outerSide_half,fTowerHeight/2.);
 	}
 	
         for(std::size_t i=0;i<8;i++){
@@ -212,8 +205,8 @@ inline void DREndcapTubeHelper::Getpt(dd4hep::rec::Vector3D *pt) {
 
 inline dd4hep::rec::Vector3D DREndcapTubeHelper::GetOrigin(int i){
 
-	if(fcalbasicbool==0) 
-	{std::cout<<"fcalbasicbool = 0"<<std::endl; 
+	if(fCalBasicBool==0) 
+	{std::cout<<"fCalBasicBool = 0"<<std::endl; 
 		return dd4hep::rec::Vector3D();
 	}
 	else{ 
