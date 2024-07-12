@@ -44,7 +44,7 @@ static Ref_t create_detector(Detector &description, xml_h e, SensitiveDetector /
   const int NbOfZRot = static_cast<int>(x_dim.deltaphi()); // number or rations aroung Z axis
   const double phi_unit = 2*M_PI/(double)NbOfZRot; // slice delta phi
   std::cout<<"--> From XML description: innerR "<<innerR/m<<" m, tower length "<<tower_height/m<<
-      " m, z-rotations "<<NbOfZRot<<std::endl;
+      " m, z-rotations "<<NbOfZRot;
   // Info for subdetectors
   xml_det_t   x_tank   = x_det.child(_Unicode(tank));
   xml_det_t   x_stave  = x_det.child(_Unicode(stave));
@@ -52,30 +52,32 @@ static Ref_t create_detector(Detector &description, xml_h e, SensitiveDetector /
   xml_det_t   x_capillary_S  = x_det.child(_Unicode(tube_S));
   xml_det_t   x_capillary_C  = x_det.child(_Unicode(tube_C));
   const double tubeRadius = x_capillary_S.outer_radius();
+  std::cout<<", tube radius "<<tubeRadius/mm<<" mm"<<std::endl;
 
   // Hardcoded parameters (not supposed to be changed)
   const double thetaB = M_PI/4; // theta at the end of barrel (45 deg)
   const int NbOfEndcap = 39;    // number of eta towers for the endcap.
                                 // De facto I will stop at 36 to leave
                                 // room for the beam pipe.
-   
-  // Create a tank to place the calorimeter
-  Box    tank_box(x_tank.x(), x_tank.y(), x_tank.z());
-  Volume tank_vol("Tank",tank_box,description.material(x_tank.attr<std::string>(_U(material))));
-  tank_vol.setVisAttributes(description, x_tank.visStr());
-
-
-  // Create helper class
+  // The 8 vertices of a tower to be defined later
+  Vector3D pt[8];
+  // Create the geometry helper and set paramters
   DREndcapTubeHelper Helper;
   Helper.SetInnerR(innerR);
   Helper.SetTowerHeight(tower_height);
   Helper.SetNumZRot(NbOfZRot);
   Helper.SetTubeRadius(tubeRadius);
 
-  dd4hep::rec::Vector3D pt[8]; // dummy inizialization of pt
+  // Start building the geometry
+  //
 
-  // Logical volume that contains a slice of the endcap r
-  // (I use the G4Generictrap class, so I define the 8 points needed)
+  // Create a tank to place the calorimeter
+  Box    tank_box(x_tank.x(), x_tank.y(), x_tank.z());
+  Volume tank_vol("Tank",tank_box,description.material(x_tank.attr<std::string>(_U(material))));
+  tank_vol.setVisAttributes(description, x_tank.visStr());
+
+  // Volume that contains a slice of the right endcap
+  // I use the EightPointSolid/Arb8/G4Generictrap so I define directly its 8 points
   //
   // The first two points of the inner face collide on the beam pipe into (0,0)
   // The second two points of the inner face are at (x=tan(0.5*phi_unit, y=innerR)
@@ -100,29 +102,24 @@ static Ref_t create_detector(Detector &description, xml_h e, SensitiveDetector /
   vertices[14] = static_cast<double>((innerR+tower_height)*tan(0.5*phi_unit));
   vertices[15] = static_cast<double>(innerR+tower_height);
   // Equivalent of Geant4 GenericTrap shape constructor
-  EightPointSolid phiER( "phiER", tower_height/2., vertices);
-  // Equivalent to Geant4 Logical Volume
-  Volume phiERLog("phiEL", phiER,description.material(x_tank.attr<std::string>(_U(material))));
+  EightPointSolid phiER("phiER", tower_height/2., vertices);
+  Volume phiERLog("phiER", phiER,description.material(x_stave.attr<std::string>(_U(material))));
   phiERLog.setVisAttributes(description, x_stave.visStr());
 
   // Place logical volume containing the Endcap R slice multiple times
   //
   // Rotate the endcap R slice around the Z axis
-  for(int j=0;j<NbOfZRot;j++){
-  //for(int j=0;j<1;j++){
+  for(std::size_t j=0;j<NbOfZRot;j++){
 
-    RotationZ rotz1(M_PI/2.); // here I discovered that rotations around Z are inverted
+    RotationZ rotz1(M_PI/2.);    // here I discovered that dd4hep rotations around Z are inverted
     RotationZ rotz2(j*phi_unit); // w.r.t. Geant4 (+->-)
     RotationX rotx(M_PI);
     RotationY roty(M_PI);
     Transform3D slice_trnsform(rotz1*rotz2*rotx*roty, Position(0,0,(innerR)*tan(thetaB)+length/2.)); 
 
-    // Place each slice into the World
-    // I move it along Z of innerR + hald tower length
-    //new G4PVPlacement(rmER,G4ThreeVector(0,0,(innerR)*tan(thetaB)+length/2.),phiERLog,"phiERPhys",logicWorld,false,j,false);
     PlacedVolume phiERPlaced = tank_vol.placeVolume(phiERLog,j,slice_trnsform);
     phiERPlaced.addPhysVolID("phiERPlace",j);
-  }
+  } // end of slice/stave placement
 
   // Create a brass tube
   //const double tubeRadius = 2.0*mm;

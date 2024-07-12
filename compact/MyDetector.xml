@@ -76,7 +76,7 @@
   -->
   <display>
     <vis name="TankVis" alpha="0.05" r="0" g="0.0" b="1.0" showDaughters="true" visible="true"/>
-    <vis name="StaveVis" alpha="0.1" r="0" g="0.0" b="1.0" showDaughters="true" visible="false"/>
+    <vis name="StaveVis" alpha="0.1" r="0" g="0.0" b="1.0" showDaughters="true" visible="true"/>
     <vis name="TowerVis" alpha="0.5" r="1.0" g="0.624" b="0.0" showDaughters="true" visible="true"/>
     <vis name="tube_S_Vis" alpha="1.0" r="0.0" g="0.0" b="1.0" showDaughters="false" visible="true"/>
     <vis name="tube_C_Vis" alpha="1.0" r="1.0" g="0.0" b="0.0" showDaughters="false" visible="true"/>
