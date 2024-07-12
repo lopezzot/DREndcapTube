@@ -33,6 +33,9 @@
     <constant name="world_x"    value="world_side/2"/>
     <constant name="world_y"    value="world_side/2"/>
     <constant name="world_z"    value="world_side/2"/>
+    <constant name="innerRadius"value="2.5*m"/>
+    <constant name="towerHeight"value="2.0*m"/>
+    <constant name="NbOfZRot"   value="36"/>
   </define>
 
   <!-- Include elements.xml file where all elements and single-element materials
@@ -85,6 +88,10 @@
   -->
   <detectors>
     <detector name="DREndcapTube" type="DD4hep_MyDetector" vis="TankVis" id ="0" sensitive="false">
+    <dimensions 
+      inner_radius="innerRadius"
+      z_length="towerHeight"
+      deltaphi="NbOfZRot"/>
       <tank   x="10*m"    y="10*m"    z="10*m"    material="Air"  vis="TankVis"/>
       <stave material="Air" vis="StaveVis"/>
       <tower material="Air" vis="TowerVis"/>

@@ -37,6 +37,14 @@ static Ref_t create_detector(Detector &description, xml_h e, SensitiveDetector /
   xml_det_t   x_det    = e;
   std::string det_name = x_det.nameStr(); // DREndcapTube volume
   std::cout<<"--> Going to create "<<det_name<<", with ID: "<<x_det.id()<<std::endl;
+  xml_dim_t x_dim = x_det.dimensions();
+  const double innerR = x_dim.inner_radius();   // inner radius at theta = 0. rad
+  const double tower_height = x_dim.z_length(); // tower height/length
+  const double length = tower_height;           // alias for tower height/length
+  const int NbOfZRot = static_cast<int>(x_dim.deltaphi()); // number or rations aroung Z axis
+  const double phi_unit = 2*M_PI/(double)NbOfZRot; // slice delta phi
+  std::cout<<"--> From XML description: innerR "<<innerR/m<<" m, tower length "<<tower_height/m<<
+      " m, z-rotations "<<NbOfZRot<<std::endl;
   // Info for subdetectors
   xml_det_t   x_tank   = x_det.child(_Unicode(tank));
   xml_det_t   x_stave  = x_det.child(_Unicode(stave));
@@ -44,22 +52,11 @@ static Ref_t create_detector(Detector &description, xml_h e, SensitiveDetector /
   xml_det_t   x_capillary_S  = x_det.child(_Unicode(tube_S));
   xml_det_t   x_capillary_C  = x_det.child(_Unicode(tube_C));
 
-  // Create the box of water that contains the bubble
-  std::cout<<"--> Going to create a box of water sphere with dimensions: "
-      <<x_tank.x()/mm<<" x(mm), "<<x_tank.y()/mm<<" y(mm), "<<x_tank.z()/mm<<" z(mm)"<<std::endl;
-  // Equivalent to G4Box
+  // Create a tank to place the calorimeter
   Box    tank_box(x_tank.x(), x_tank.y(), x_tank.z());
-  // Equivalent to G4LogicalVolume
   Volume tank_vol("Tank",tank_box,description.material(x_tank.attr<std::string>(_U(material))));
-  // Assign vis attributes to the water box (logical) volume
   tank_vol.setVisAttributes(description, x_tank.visStr());
 
-  //Part of endcap container
-  const double innerR = 2500.*mm; // inner radius
-  const double tower_height = 2000.*mm; // tower height/length
-  const double length = tower_height; // alias for tower height/length
-  const int NbOfZRot = 36; // number or rations aroung Z axis
-  const double phi_unit = 2*M_PI/(double)NbOfZRot; // slice delta phi
   // number of eta towers for the barrel
   const int NbOfBarrel = 40;
   // number of eta towers for the endcap
@@ -254,7 +251,7 @@ static Ref_t create_detector(Detector &description, xml_h e, SensitiveDetector /
     double y_backplane = pt[4].y();
     double x_backplane = pt[4].x();
     double x_start = 0;
-    for(std::size_t k=0; k<15; k++){
+    for(std::size_t k=0; k<115; k++){
       x_start = x_backplane;
       double y_tube = 0.;
       double delta_x = 0.;
