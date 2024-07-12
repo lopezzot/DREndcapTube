@@ -380,15 +380,15 @@ static Ref_t create_detector(Detector &description, xml_h e, SensitiveDetector /
            }
          }
          // Check if this is the last S tube
-         bool IsLastTube_S = -1.*x_backplane+delta_x-x_tube < tubeDiameter+tubeRadius ? true : false;
          if((-1.*y_backplane)-y_tube < (y_pitch+tubeRadius)) break; // not place place C tube if there is no room on y
+         bool IsLastTube_C = -1.*x_backplane+delta_x-x_tube < tubeDiameter ? true : false;
 
          // After the S tube placement I place the closest C tube
          // according to the fixed structure of the tubes placement (gluing)
          //
          // If the S tube below was not placed (too short) do not place the C either
          // && if it was the last S tube do not place the next C tube
-         if (capillaryLength > 5.0*cm && !IsLastTube_S){
+         if (capillaryLength > 5.0*cm && !IsLastTube_C){
            double x_tube_C = x_tube + tubeRadius;
            std::cout<<"Cher "<<x_tube<<" "<<x_tube_C<<std::endl;
            double y_tube_C = y_tube + y_pitch; 
@@ -410,7 +410,7 @@ static Ref_t create_detector(Detector &description, xml_h e, SensitiveDetector /
          }
            
          // condition for stopping S capillary placement along x
-         if(IsLastTube_S) break;
+         if(-1.*x_backplane+delta_x-x_tube < tubeDiameter+tubeRadius) break;
       } // end x loop
  
       // y_backplane is equal up and down so I can keep the same for exiting loop
