@@ -36,6 +36,7 @@
     <constant name="innerRadius"value="2.5*m"/>
     <constant name="towerHeight"value="2.0*m"/>
     <constant name="NbOfZRot"   value="36"/>
+    <constant name="TubeRadius" value="2.0*mm"/>
   </define>
 
   <!-- Include elements.xml file where all elements and single-element materials
@@ -95,8 +96,8 @@
       <tank   x="10*m"    y="10*m"    z="10*m"    material="Air"  vis="TankVis"/>
       <stave material="Air" vis="StaveVis"/>
       <tower material="Air" vis="TowerVis"/>
-      <tube_S material="Air" vis="tube_S_Vis"/>
-      <tube_C material="Air" vis="tube_C_Vis"/>
+      <tube_S material="Air" outer_radius="TubeRadius" vis="tube_S_Vis"/>
+      <tube_C material="Air" outer_radius="TubeRadius" vis="tube_C_Vis"/>
     </detector>
   </detectors>
 

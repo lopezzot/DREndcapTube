@@ -31,9 +31,9 @@ static Ref_t create_detector(Detector &description, xml_h e, SensitiveDetector /
 
   std::cout<<"--> DREndcapTube::create_detector() start"<<std::endl;
 
-  // Get info coded in the xml file
+  // Get info from the xml file
   // 
-  // Info for whole detector element DREndcapTube
+  // Info for the main detector element DREndcapTube
   xml_det_t   x_det    = e;
   std::string det_name = x_det.nameStr(); // DREndcapTube volume
   std::cout<<"--> Going to create "<<det_name<<", with ID: "<<x_det.id()<<std::endl;
@@ -51,7 +51,8 @@ static Ref_t create_detector(Detector &description, xml_h e, SensitiveDetector /
   xml_det_t   x_tower  = x_det.child(_Unicode(tower));
   xml_det_t   x_capillary_S  = x_det.child(_Unicode(tube_S));
   xml_det_t   x_capillary_C  = x_det.child(_Unicode(tube_C));
-
+  const double tubeRadius = x_capillary_S.outer_radius();
+   
   // Create a tank to place the calorimeter
   Box    tank_box(x_tank.x(), x_tank.y(), x_tank.z());
   Volume tank_vol("Tank",tank_box,description.material(x_tank.attr<std::string>(_U(material))));
@@ -67,7 +68,6 @@ static Ref_t create_detector(Detector &description, xml_h e, SensitiveDetector /
   Helper.SetInnerR(innerR);
   Helper.SetTowerHeight(tower_height);
   Helper.SetNumZRot(NbOfZRot);
-  const double tubeRadius = 2.0*mm;
   Helper.SetTubeRadius(tubeRadius);
 
   dd4hep::rec::Vector3D pt[8]; // dummy inizialization of pt
