@@ -9,12 +9,6 @@
 #ifndef DREndcapTube_H
 #define DREndcapTube_H
 
-// Includers from DD4hep
-#include "DDRec/Vector3D.h"
-
-using namespace dd4hep;
-using namespace dd4hep::rec; // for dd4hep::rec::Vector3D
-
 // This struct represents a plane corresponding to a tower's face.
 // I construct it with the 4 edges (points) of the tower's face,
 // however only 3 points will be used to define the plane.

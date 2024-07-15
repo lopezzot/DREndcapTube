@@ -11,6 +11,7 @@
 #include <DD4hep/OpticalSurfaces.h>
 #include <DD4hep/Printout.h>
 #include <DD4hep/Detector.h>
+#include "DDRec/Vector3D.h"
 
 // Includers from stl
 #include <iostream>
@@ -18,12 +19,12 @@
 #include <cmath>
 #include <array>
 
-// Includers from project files
-#include "DREndcapTube.hh"
-
 using namespace dd4hep;
 using namespace dd4hep::detail;
 using namespace dd4hep::rec;
+
+// Includers from project files
+#include "DREndcapTube.hh"
 
 // Create the endcap calorimeter
 //
@@ -55,10 +56,20 @@ static Ref_t create_detector(Detector &description, xml_h e, SensitiveDetector /
   std::cout<<", tube radius "<<tubeRadius/mm<<" mm"<<std::endl;
 
   // Hardcoded parameters (not supposed to be changed)
-  const double thetaB = M_PI/4; // theta at the end of barrel (45 deg)
-  const int NbOfEndcap = 39;    // number of eta towers for the endcap.
-                                // De facto I will stop at 36 to leave
-                                // room for the beam pipe.
+  constexpr double thetaB{M_PI/4}; // theta at the end of barrel (45 deg)
+  constexpr int NbOfEndcap{39};    // number of eta towers for the endcap.
+                                   // De facto I will stop at 36 to leave
+                                   // room for the beam pipe.
+  // Length correction to be applied to capillary tubes
+  // with length reduced by the intersection
+  // with the tower's planes.
+  // It is needed for the intersections with
+  // the lateral sides for which the intersecting
+  // point is not exactly the left or right edge of the tube
+  constexpr double TubeLengthOffset{0.1*mm};
+  const double tubeDiameter = tubeRadius*2.;
+  const double y_pitch = tubeDiameter*sqrt(3)/2.; // y-distance from tube center to center
+                                                  // fixed by the tubes positioning
   // The 8 vertices of a tower to be defined later
   Vector3D pt[8];
   // Create the geometry helper and set paramters
@@ -109,7 +120,7 @@ static Ref_t create_detector(Detector &description, xml_h e, SensitiveDetector /
   // Place logical volume containing the Endcap R slice multiple times
   //
   // Rotate the endcap R slice around the Z axis
-  for(std::size_t j=0;j<NbOfZRot;j++){
+  for(std::size_t j=0;j<static_cast<std::size_t>(NbOfZRot);j++){
 
     RotationZ rotz1(M_PI/2.);    // here I discovered that dd4hep rotations around Z are inverted
     RotationZ rotz2(j*phi_unit); // w.r.t. Geant4 (+->-)
@@ -117,8 +128,8 @@ static Ref_t create_detector(Detector &description, xml_h e, SensitiveDetector /
     RotationY roty(M_PI);
     Transform3D slice_trnsform(rotz1*rotz2*rotx*roty, Position(0,0,(innerR)*tan(thetaB)+length/2.)); 
 
-    PlacedVolume phiERPlaced = tank_vol.placeVolume(phiERLog,j,slice_trnsform);
-    phiERPlaced.addPhysVolID("phiERPlace",j);
+    //PlacedVolume phiERPlaced = tank_vol.placeVolume(phiERLog,j,slice_trnsform);
+    //phiERPlaced.addPhysVolID("phiERPlace",j);
   } // end of slice/stave placement
 
   // Create an S tube with full tower length
@@ -133,9 +144,10 @@ static Ref_t create_detector(Detector &description, xml_h e, SensitiveDetector /
 
   // Build the towers inside and endcap R slice
   //
-  Helper.SetRbool(1);
+  Helper.SetRbool(1); // Build the right endcap (will reflect it for left part)
   double thetaofcenter = 0.; // theta angle to center of tower being constructed
   double thetaofcenter2 = 0.; // theta angle to center of next tower
+  // I fix delta theta of every tower to be the same for every tower
   double deltatheta_endcap[40] = {0.};
   for(int i=0;i<NbOfEndcap+1;i++) deltatheta_endcap[i] = M_PI/4/(NbOfEndcap+1);
   double thetaE = 0.;
@@ -218,7 +230,7 @@ static Ref_t create_detector(Detector &description, xml_h e, SensitiveDetector /
     //    phiERLog.placeVolume(towerLog,i,tower_trnsform);
     //}
     //if(i<35) tank_vol.placeVolume(towerLog,i,tower_rot);
-    if(i==0) tank_vol.placeVolume(towerLog);
+    if(i<35) tank_vol.placeVolume(towerLog);
     //if(i<35) tank_vol.placeVolume(towerLog,i,rotX*rotY*rotZ);
 
 
@@ -228,135 +240,97 @@ static Ref_t create_detector(Detector &description, xml_h e, SensitiveDetector /
 
 
 
-
-    // Capillary placement inside tower(s)
+    // Capillary placement inside tower (both S and C)
     //
-    // offset to be applied to capillary tubes
-    // with length reduced by the intersection
-    // with the tower's planes.
-    // It is needed for the intersections with
-    // the lateral sides for which the intersecting
-    // point is not exactly the left or right edge of the tube.
-    const double FiberLengthOffset{0.1*mm}; 
-    const double tubeDiameter = tubeRadius*2.;
-    const double y_pitch = tubeDiameter*sqrt(3)/2.; //y-distance from center to center
-    //Fill a tower along y
-    double y_backplane = pt[4].y();
-    double x_backplane = pt[4].x();
-    double x_start = 0;
+    // Fill a tower along y (vertical direction)
+    // per each row calculate x and y of the starting tube (left most)
+    const double y_backplane = pt[4].y(); // y-coordinate of bottom left corner of back face
+    const double x_backplane = pt[4].x(); // x-coordinate of bottom left corner of back face
     for(std::size_t k=0; k<115; k++){
-      x_start = x_backplane;
+      double x_start = x_backplane;
       double y_tube = 0.;
-      double delta_x = 0.;
+      double delta_x = 0.; // correction to tune x-coordinate
+      // if it is the first row fix the y coordinate
       if(k==0) y_tube = y_backplane + tubeRadius + 1.0*mm; //add 1 mm otherwise the tube immediately intersect with a plane
       else {
         y_tube = y_backplane + tubeRadius + 1.0*mm + k*2.*y_pitch;
 
-        // Adjust starting x given the opening angle of the Trap back face
+        // Adjust starting x given the opening angle of the trapezoidal back face
         double hypotenuse = sqrt(pow((-1*y_backplane)*2,2) + pow(pt[6].x()-pt[4].x(),2));
         double angle = acos(((-1*y_backplane)*2) / hypotenuse);
         delta_x = ((-1.*y_backplane) - (-1.*y_tube)) * tan(angle);
-        //std::cout<<k<<" delta x "<<delta_x<<std::endl;
       }
       if(delta_x > tubeDiameter) {
-          // Calculate how many fibers should be inserted in x
+          // Calculate how many fibers should be inserted in x.
           // Caveat: casting to int does not round takes only the 
           // integer part (i.e. 6.9 -> 6)
-          auto newFibersNo = static_cast<int>(delta_x/tubeDiameter);
-          x_start = x_start - newFibersNo*tubeDiameter;
-          //std::cout<<k<<" longerrrrrrrrrrr delta_x "<<delta_x/cm<<" cm "<<newFibersNo<<" "<<newFibersNo*tubeDiameter<<std::endl;
-          //std::cout<<"x_start "<<x_start<<std::endl;
+          auto newTubesNo = static_cast<int>(delta_x/tubeDiameter);
+          x_start = x_start - newTubesNo*tubeDiameter;
       }
 
-      //Fill a tower row along x
+      //Fill a tower row along x (lateral direction)
       for(std::size_t j=0;j<1000;j++){
-         auto x_tube = x_start  + tubeRadius + j*(tubeDiameter); 
-         Vector3D capillaryPos(x_tube, y_tube, length/2.);
-         auto capillaryLength = Helper.GetTubeLength(pt,capillaryPos);
-         //std::cout<<" my x y "<<x_tube<<" "<<y_tube<<" length "<<capillaryLength<<std::endl;
+         auto x_tube = x_start  + tubeRadius + j*(tubeDiameter);       // locate the center of the tube in x 
+         Vector3D capillaryPos(x_tube, y_tube, length/2.);             // locate tube on tower back face
+         auto capillaryLength = Helper.GetTubeLength(pt,capillaryPos); // calculate tube length
          if(capillaryLength == length){
            PlacedVolume capillaryPlaced = towerLog.placeVolume(capillary_SLog, 1000*k+j, Position(x_tube, y_tube, 0.));
          }
-         else{
+         else if(capillaryLength > 5.0*cm){
            // Note: the root visualizer does not display tubes with capillaryLength < 4.5 cm.
            // Such tubes are usually the ones closest to the left or right side of a tower.
            // They seem to be placed correctly but not displayed. 
            // I am adding a cut over tube length of 5.0 cm: tubes below it will not be placed.
-           if (capillaryLength > 5.0*cm) { // do not place tubes with length < 5.0 cm
-             Tube capillaryShort(0.*mm, tubeRadius, (capillaryLength-FiberLengthOffset)/2., 2*M_PI); // reduced capillary length
-                                                                                                     // by a fixed offset
-             Volume capillaryShortLog("capillaryShortLog",capillaryShort,description.material(x_tank.attr<std::string>(_U(material))));
-             capillaryShortLog.setVisAttributes(description, x_capillary_S.visStr());
-             PlacedVolume capillaryShortPlaced = towerLog.placeVolume(capillaryShortLog, 1000*k+j, Position(x_tube, y_tube, length/2.-capillaryLength/2.+FiberLengthOffset/2.));
-           }
+           Tube capillaryShort(0.*mm, tubeRadius, (capillaryLength-TubeLengthOffset)/2., 2*M_PI); // reduced capillary length
+                                                                                                  // by a fixed offset
+           Volume capillaryShortLog("capillaryShortLog",capillaryShort,description.material(x_capillary_S.attr<std::string>(_U(material))));
+           capillaryShortLog.setVisAttributes(description, x_capillary_S.visStr());
+           PlacedVolume capillaryShortPlaced = towerLog.placeVolume(capillaryShortLog, 1000*k+j, Position(x_tube, y_tube, length/2.-capillaryLength/2.+TubeLengthOffset/2.));
          }
-         // Check if this is the last S tube
-         if((-1.*y_backplane)-y_tube < (y_pitch+tubeRadius)) break; // not place place C tube if there is no room on y
+         else {;}
+
+         // Now C tubes are placed.
+         // First check there is enough room in y-direction, if not do not exit tube placement
+         if((-1.*y_backplane)-y_tube < (y_pitch+tubeRadius)) break; // do not place C tube row
+         // This checks if there is enough room in x-direction to place a C tube after its S one
          bool IsLastTube_C = -1.*x_backplane+delta_x-x_tube < tubeDiameter ? true : false;
 
          // After the S tube placement I place the closest C tube
          // according to the fixed structure of the tubes placement (gluing)
          //
          // If the S tube below was not placed (too short) do not place the C either
-         // && if it was the last S tube do not place the next C tube
+         // && if there is not enough room on x-direction do not place the C tube
          if (capillaryLength > 5.0*cm && !IsLastTube_C){
            double x_tube_C = x_tube + tubeRadius;
-           //std::cout<<"Cher "<<x_tube<<" "<<x_tube_C<<std::endl;
            double y_tube_C = y_tube + y_pitch; 
            Vector3D capillaryPos_C(x_tube_C, y_tube_C, length/2.);
            auto capillaryLength_C = Helper.GetTubeLength(pt,capillaryPos_C);
-           //std::cout<<"capillary length c "<<capillaryLength_C<<std::endl;
            if(capillaryLength_C == length){
              PlacedVolume capillaryPlaced_C = towerLog.placeVolume(capillary_CLog, 100000*k+j, Position(x_tube_C, y_tube_C, 0.));
            } 
-           else{
-             if (capillaryLength_C > 5.0*cm){
-               Tube capillaryShort_C(0.*mm, tubeRadius, (capillaryLength_C-FiberLengthOffset)/2., 2*M_PI); // reduced capillary length
-                                                                                                         // by a fixed offset
-               Volume capillaryShortLog_C("capillaryShortLog_C",capillaryShort_C,description.material(x_tank.attr<std::string>(_U(material))));
+           else if(capillaryLength_C > 5.0*cm){
+               Tube capillaryShort_C(0.*mm, tubeRadius, (capillaryLength_C-TubeLengthOffset)/2., 2*M_PI); // reduced capillary length
+                                                                                                          // by a fixed offset
+               Volume capillaryShortLog_C("capillaryShortLog_C",capillaryShort_C,description.material(x_capillary_C.attr<std::string>(_U(material))));
                capillaryShortLog_C.setVisAttributes(description, x_capillary_C.visStr());
-               PlacedVolume capillaryShortPlaced_C = towerLog.placeVolume(capillaryShortLog_C, 100000*k+j, Position(x_tube_C, y_tube_C, length/2.-capillaryLength_C/2.+FiberLengthOffset/2.));
-             }
+               PlacedVolume capillaryShortPlaced_C = towerLog.placeVolume(capillaryShortLog_C, 100000*k+j, Position(x_tube_C, y_tube_C, length/2.-capillaryLength_C/2.+TubeLengthOffset/2.));
            }
+           else {;}
          }
            
          // condition for stopping S capillary placement along x
          if(-1.*x_backplane+delta_x-x_tube < tubeDiameter+tubeRadius) break;
       } // end x loop
  
+      // Condition for stopping C capillary placement along y.
       // y_backplane is equal up and down so I can keep the same for exiting loop
       if((-1.*y_backplane)-y_tube < (2.*y_pitch+tubeRadius)) break;
-    } // end y loop
-
-
-
+    } // End y loop and tube placement
 
     // Update parameters
     Helper.Getpt(pt);
     fulltheta = fulltheta-deltatheta_endcap[i];
-  } //End of towers creation
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+  } //End of towers creation and placement
 
   // Create a (DetElement) corresponding to MyDetector.
   // From DD4hep docs https://dd4hep.web.cern.ch/dd4hep/usermanuals/DD4hepManual/DD4hepManualch2.html
