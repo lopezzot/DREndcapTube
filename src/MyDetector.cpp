@@ -52,7 +52,7 @@ static Ref_t create_detector(Detector &description, xml_h e, SensitiveDetector /
   // Hardcoded parameters (not supposed to be changed)
   constexpr double thetaB{M_PI/4}; // theta at the end of barrel (45 deg)
   constexpr int NbOfEndcap{39};    // number of eta towers for the endcap.
-                                   // De facto I will stop at 36 to leave
+                                   // De facto I will stop at 35 to leave
                                    // room for the beam pipe.
   // Length correction to be applied to capillary tubes
   // with length reduced by the intersection
@@ -148,91 +148,70 @@ static Ref_t create_detector(Detector &description, xml_h e, SensitiveDetector /
   for(int i=0;i<NbOfEndcap+1;i++) thetaE += deltatheta_endcap[i];
   double fulltheta = thetaE; // 45 deg by construction
 
+  // Loop over tower number, stop at tower 35 to leave room for beam pipe
   //for(int i=0;i<NbOfEndcap-1;i++){
-  for(int i=0;i<1;i++){
+  for(int i=0;i<NbOfEndcap-1;i++){
 
-    // this is theta angle from beam pipe up
-    // center of first (highest) tower is 45 deg - deltatheta_endcap[i]
+    // Center of first (highest) tower is 45 deg - deltatheta_endcap[1]/2
     thetaofcenter = fulltheta-deltatheta_endcap[i]/2.;
-    //G4cout<<"thetaofcenter "<<thetaofcenter<<" rad"<<G4endl;
-    // this is theta of center of the next tower
+    // Center of the next tower
     thetaofcenter2=thetaofcenter-deltatheta_endcap[i]/2.-deltatheta_endcap[i+1]/2.;
-    //G4cout<<"thetaofcenter2 "<<thetaofcenter2<<" rad"<<G4endl;
-    //std::cout<<i<<" deltatheta_endcap_i "<<deltatheta_endcap[i]<<" thetaofcenter "<<thetaofcenter<<
-    //    " deltatheta_endcap_i+1 "<<deltatheta_endcap[i+1]<<" thetaofcenter2 "<<thetaofcenter2<<std::endl;
+    // Update Helper class parameters accordingly
     Helper.SetDeltaTheta(deltatheta_endcap[i]);
     Helper.SetThetaOfCenter(thetaofcenter);
     Helper.SetDeltaTheta2(deltatheta_endcap[i+1]);
     Helper.SetThetaOfCenter2(thetaofcenter2);
-    Helper.CalBasic();
-    Helper.Getpt(pt);
-    //for(int i=0; i<8;i++){
-    //  std::cout<<i<<" "<<pt[i].x()<<" "<<pt[i].y()<<" "<<pt[i].z()<<std::endl;
-    //}
+    Helper.CalBasic(); // Perform internal calculations
+    Helper.Getpt(pt);  // Update 8 Vectors defining the tower edges
     
-    // Calculation of parameters to create Trap
-    auto pDz = (pt[7]).z();
-    auto pDy1     = ((pt[2]).y()-(pt[1]).y())*0.5;
-    auto pDx1     = ((pt[1]).x()-(pt[0]).x())*0.5;
-    auto pDx2     = ((pt[3]).x()-(pt[2]).x())*0.5;
-    auto fTalpha1 = ((pt[2]).x()+(pt[3]).x()-(pt[1]).x()-(pt[0]).x())*0.25/pDy1;
-    auto pAlp1 = std::atan(fTalpha1);
-    auto pDy2     = ((pt[6]).y()-(pt[5]).y())*0.5;
-    auto pDx3     = ((pt[5]).x()-(pt[4]).x())*0.5;
-    auto pDx4     = ((pt[7]).x()-(pt[6]).x())*0.5;
-    auto fTalpha2 = ((pt[6]).x()+(pt[7]).x()-(pt[5]).x()-(pt[4]).x())*0.25/pDy2;
-    auto pAlp2 = std::atan(fTalpha2);
+    // Create now the tower as a Trap
+    //
+    // Problem: G4Trap has a constructors using the 8 vertices of the trapezoid
+    // but DD4hep Trap does not have such constructor.
+    // Therefore I calculate here the parameters to be passed to the DD4hep Trap. 
+    auto pDz        = (pt[7]).z();
+    auto pDy1       = ((pt[2]).y()-(pt[1]).y())*0.5;
+    auto pDx1       = ((pt[1]).x()-(pt[0]).x())*0.5;
+    auto pDx2       = ((pt[3]).x()-(pt[2]).x())*0.5;
+    auto fTalpha1   = ((pt[2]).x()+(pt[3]).x()-(pt[1]).x()-(pt[0]).x())*0.25/pDy1;
+    auto pAlp1      = std::atan(fTalpha1);
+    auto pDy2       = ((pt[6]).y()-(pt[5]).y())*0.5;
+    auto pDx3       = ((pt[5]).x()-(pt[4]).x())*0.5;
+    auto pDx4       = ((pt[7]).x()-(pt[6]).x())*0.5;
+    auto fTalpha2   = ((pt[6]).x()+(pt[7]).x()-(pt[5]).x()-(pt[4]).x())*0.25/pDy2;
+    auto pAlp2      = std::atan(fTalpha2);
     auto fThetaCphi = ((pt[4]).x()+pDy2*fTalpha2+pDx3)/pDz;
-    //std::cout<<pt[4].x()<<" "<<pDy2<<" "<<fTalpha2<<" "<<pDx3<<" "<<pDz<<std::endl;
     auto fThetaSphi = ((pt[4]).y()+pDy2)/pDz;
-    //std::cout<<"theta c phi "<<fThetaCphi<<" "<<fThetaSphi<<std::endl;
-    double pPhi = 0.;
-    double pTheta = 0.;
+    double pPhi     = 0.;
+    double pTheta   = 0.;
     if(fThetaSphi==0. && fThetaCphi==0.){}
     else{
          pPhi = std::atan(fThetaSphi/fThetaCphi);
          pTheta = std::atan(fThetaCphi/std::cos(pPhi));
-    }
+    } // end of Trap parameters calculation
     
-    //sprintf(name,"tower%d",NbOfBarrel+i+1); 
-    //std::cout<<name<<std::endl;
+    std::cout<<"--> Tower "<<i<<" being constructed"<<std::endl;
 
-    Trap tower( "phiER", pDz, pTheta, pPhi, pDy1, pDx1, pDx2, pAlp1, pDy2, pDx3, pDx4, pAlp2);
-    //std::cout<<"tower dim "<<tower.dZ()<<" "<<tower.theta()<<" "<<tower.phi()<<std::endl;
-    Volume towerLog("towerLog", tower, description.material(x_tank.attr<std::string>(_U(material))));
+    Trap tower("phiER", pDz, pTheta, pPhi, pDy1, pDx1, pDx2, pAlp1, pDy2, pDx3, pDx4, pAlp2);
+    Volume towerLog("towerLog", tower, description.material(x_tower.attr<std::string>(_U(material))));
     towerLog.setVisAttributes(description, x_tower.visStr());
 
-    //PlacedVolume towerPlaced = tank_vol.placeVolume(towerLog);
-    //towerPlaced.addPhysVolID("towerPlaced",i);
-
-    //G4RotationMatrix* rm = new G4RotationMatrix();
-    //rm->rotateX(thetaofcenter);
-    //RotationZYX tower_rot(0.,0.,-thetaofcenter); //phi theta psi
-    //std::cout<<"around Z "<<tower_rot.Phi()<<" around X "<<tower_rot.Psi()<<" around Y "<<tower_rot.Theta()<<std::endl;
-
-    RotationX rotX(-thetaofcenter);
+    RotationX rotX(-thetaofcenter);   // Rotation matrix for this tower
     RotationY rotY(0.);
     RotationZ rotZ(0.);
-    //G4ThreeVector c = dimE->GetOrigin(0);
-    dd4hep::rec::Vector3D c = Helper.GetOrigin(0);
-    //std::cout<<"origin x "<<c.x()<<" "<<" y "<<c.y()<<" z "<<c.z()<<std::endl;
-    //G4ThreeVector c_new(-c.getY(),c.getZ(),c.getX()-(innerR+0.5*length));
-    dd4hep::rec::Vector3D c_new(-c.y(),c.z(),c.x()-(innerR+0.5*length));
-    //if(i<35) new G4PVPlacement(rm,c_new,towerLV,name,phiERLog,false,NbOfBarrel+i+1,false);
-    //if(i<35) {
+    Vector3D c = Helper.GetOrigin(0); // Get origin of tower
+    Vector3D c_new(-c.y(),c.z(),c.x()-(innerR+0.5*length));
+    //if(i<35) { // Place towers up to 35, this "if" is just a protection in case the loop range is changed
     //    Transform3D tower_trnsform(rotX*rotY*rotZ, Position(c_new.x(),c_new.y(),c_new.z())); 
-    //    phiERLog.placeVolume(towerLog,i,tower_trnsform);
+    //    PlacedVolume towerPlaced = phiERLog.placeVolume(towerLog,i,tower_trnsform);
+    //    towerPlaced.addPhysVolID("tower",i);
     //}
-    //if(i<35) tank_vol.placeVolume(towerLog,i,tower_rot);
-    if(i<35) tank_vol.placeVolume(towerLog);
-    //if(i<35) tank_vol.placeVolume(towerLog,i,rotX*rotY*rotZ);
-
-
-
-
-
-
-
+    // Or, to debug, place towers one next to each other in tank volume
+    if(i<35) {
+        double z = static_cast<int>(i/15)*(length+40*cm);
+        double x = (i-static_cast<int>(i/15)*15)*100*cm - 5*m;
+        tank_vol.placeVolume(towerLog,i,Position(-1.*x,0.,-1.*z));
+    }
 
     // Capillary placement inside tower (both S and C)
     //
@@ -240,7 +219,7 @@ static Ref_t create_detector(Detector &description, xml_h e, SensitiveDetector /
     // per each row calculate x and y of the starting tube (left most)
     const double y_backplane = pt[4].y(); // y-coordinate of bottom left corner of back face
     const double x_backplane = pt[4].x(); // x-coordinate of bottom left corner of back face
-    for(std::size_t k=0; k<115; k++){
+    for(std::size_t k=0; k<200; k++){
       double x_start = x_backplane;
       double y_tube = 0.;
       double delta_x = 0.; // correction to tune x-coordinate
