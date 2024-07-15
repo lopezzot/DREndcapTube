@@ -1,15 +1,11 @@
 <lccdd>
-<!--
-#==========================================================================
-# File: MyDetector.xml
-#
-# Purpose: A simple xml file to create MyDetector: a sphere or air
-# inside a box of water
-#
-# Author: Lorenzo Pezzotti, wildly using dd4hep examples
-#
-# Created: 2/5/2024
-#==========================================================================
+<!-- #==========================================================================
+     # File: MyDetector.xml
+     # Brief: XML description file for the endcap geometry of the IDEA
+     #        dual-readout calorimeter with the capillary tubes technology
+     # Author: Lorenzo Pezzotti (CERN) @lopezzot
+     # Created: 12/7/2024
+     #==========================================================================
 -->
 
 <!-- #==========================================================================
@@ -23,20 +19,24 @@
      #
      #==========================================================================
 -->
-  <info name="CreateMyDetector"
-    title="Creating an air sphere inside a water box"
+  <info name="DREndcapTube"
+    title="IDEA dual-readout endcap calorimeter with capillary tubes"
     author="Lorenzo Pezzotti"
     url="None"
     status="development"
     version="0.1">
-    <comment>Creating an air sphere inside a water box</comment>
+    <comment></comment>
   </info>
 
   <define>
-    <constant name="world_side" value="1*m"/>
+    <constant name="world_side" value="6*m"/>
     <constant name="world_x"    value="world_side/2"/>
     <constant name="world_y"    value="world_side/2"/>
     <constant name="world_z"    value="world_side/2"/>
+    <constant name="innerRadius"value="2.5*m"/>
+    <constant name="towerHeight"value="2.0*m"/>
+    <constant name="NbOfZRot"   value="36"/>
+    <constant name="TubeRadius" value="2.0*mm"/>
   </define>
 
   <!-- Include elements.xml file where all elements and single-element materials
@@ -75,11 +75,11 @@
        and visibile (or invisible) true/false.
   -->
   <display>
-    <vis name="TankVis"    alpha="0.05"   r="0"   g="0.0" b="1.0"  showDaughters="true"  visible="true"/>
-    <vis name="StaveVis"   alpha="0.1"   r="0"   g="0.0" b="1.0"  showDaughters="true"  visible="false"/>
-    <vis name="TowerVis"   alpha="0.5"   r="1.0"   g="0.624" b="0.0"  showDaughters="true"  visible="true"/>
-    <vis name="CapillaryVis" alpha="1.0" r="0.0"  g="0.0" b="1.0" showDaughters="false" visible="true"/>
-    <vis name="CapillaryVis_C" alpha="1.0" r="1.0"  g="0.0" b="0.0" showDaughters="false" visible="true"/>
+    <vis name="TankVis" alpha="0.05" r="0" g="0.0" b="1.0" showDaughters="true" visible="true"/>
+    <vis name="StaveVis" alpha="0.1" r="0" g="0.0" b="1.0" showDaughters="true" visible="true"/>
+    <vis name="TowerVis" alpha="0.5" r="1.0" g="0.624" b="0.0" showDaughters="true" visible="true"/>
+    <vis name="tube_S_Vis" alpha="1.0" r="0.0" g="0.0" b="1.0" showDaughters="false" visible="true"/>
+    <vis name="tube_C_Vis" alpha="1.0" r="1.0" g="0.0" b="0.0" showDaughters="false" visible="true"/>
   </display>
 
   <!-- Define the detector. A detector has a name, type to be returned in .cpp file with 
@@ -88,12 +88,16 @@
        If a detector contains sub-detectors, their information must be included as below.
   -->
   <detectors>
-    <detector name="MyDetector" type="DD4hep_MyDetector" vis="TankVis" id ="1" sensitive="false">
+    <detector name="DREndcapTube" type="DD4hep_MyDetector" vis="TankVis" id ="0" sensitive="false">
+    <dimensions 
+      inner_radius="innerRadius"
+      z_length="towerHeight"
+      deltaphi="NbOfZRot"/>
       <tank   x="10*m"    y="10*m"    z="10*m"    material="Air"  vis="TankVis"/>
       <stave material="Air" vis="StaveVis"/>
       <tower material="Air" vis="TowerVis"/>
-      <capillary material="Air" vis="CapillaryVis"/>
-      <capillary_C material="Air" vis="CapillaryVis_C"/>
+      <tube_S material="Air" outer_radius="TubeRadius" vis="tube_S_Vis"/>
+      <tube_C material="Air" outer_radius="TubeRadius" vis="tube_C_Vis"/>
     </detector>
   </detectors>
 
