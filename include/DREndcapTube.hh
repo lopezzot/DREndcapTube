@@ -85,7 +85,9 @@ class DREndcapTubeHelper {
     // Methods to calculate towers parameters
     //
     void CalBasic();
+    // Get origin on tower within its phi slice/stave
     Vector3D GetOrigin(int i);
+    // Get 8 vector/points for the tower Trap edges
     void Getpt(Vector3D *pt);
 
     // Methods to calculate tubes lengths
@@ -99,127 +101,118 @@ class DREndcapTubeHelper {
 
 inline void DREndcapTubeHelper::CalBasic(){
 
-    fCalBasicBool = 1;
+  fCalBasicBool = 1;
+  
+  // distance from center to front face of first tower
+  // radius is 2500 mm which is same as distance from center to front face of very
+  // last tower.
+  // To get distance to first tower I divide this radius by cosine of first tower.
+  // To understand impact of sin*tan part
+  finnerR_new = fInnerR/(cos(fThetaOfCenter)-sin(fThetaOfCenter)*tan(fDeltaTheta/2.));
+  // distance from center to front face of second tower (same as above)
+  finnerR_new2 = fInnerR/(cos(fThetaOfCenter2)-sin(fThetaOfCenter2)*tan(fDeltaTheta2/2.));
     
-    // distance from center to front face of first tower
-    // radius is 2500 mm which is same as distance from center to front face of very
-    // last tower.
-    // To get distance to first tower I divide this radius by cosine of first tower.
-    // To understand impact of sin*tan part
-    finnerR_new = fInnerR/(cos(fThetaOfCenter)-sin(fThetaOfCenter)*tan(fDeltaTheta/2.));
-    // distance from center to front face of second tower (same as above)
-    finnerR_new2 = fInnerR/(cos(fThetaOfCenter2)-sin(fThetaOfCenter2)*tan(fDeltaTheta2/2.));
-    
-    // Half size at front face of first tower given by effective radius times tan of half delta
-    double innerSide_half = finnerR_new*tan(fDeltaTheta/2.);
-    // Half size at back face
-    // double outerSide_half = (finnerR_new+fTowerHeight)*tan(fDeltaTheta/2.);	
-    
-    // Half size at front face of second tower (same as above)
-    double innerSide_half2 = finnerR_new2*tan(fDeltaTheta2/2.);
+  // Half size at front face of first tower given by effective radius times tan of half delta
+  double innerSide_half = finnerR_new*tan(fDeltaTheta/2.);
+  // Half size at back face
+  // double outerSide_half = (finnerR_new+fTowerHeight)*tan(fDeltaTheta/2.);	
+   
+  // Half size at front face of second tower (same as above)
+  double innerSide_half2 = finnerR_new2*tan(fDeltaTheta2/2.);
 
-    // Distance from origin to center of first tower
-    fTrns_Length = fTowerHeight/2.+finnerR_new;
+  // Distance from origin to center of first tower
+  fTrns_Length = fTowerHeight/2.+finnerR_new;
 	
-    // Vector from origin to center of first tower
-    // Remember towers are placed starting from the one laying on the x-axis 
-    fTrns_Vector = dd4hep::rec::Vector3D(cos(fThetaOfCenter)*fTrns_Length,0,sin(fThetaOfCenter)*fTrns_Length);
-    
-    double dx1=fInnerR; // inner radius hardcoded in detector construction
-    double dxi=sin(fThetaOfCenter)*finnerR_new+innerSide_half*cos(fThetaOfCenter);
-    double dxi2=sin(fThetaOfCenter2)*finnerR_new2+innerSide_half2*cos(fThetaOfCenter2);
-    Ratio=dxi/dx1;
-    Ratio2=dxi2/dx1;
-    std::cout<<"finnerR_new "<<finnerR_new/dd4hep::mm<<" innerSide_half "<<innerSide_half/dd4hep::mm<<" Ratio: "<<Ratio<<std::endl;
+  // Vector from origin to center of first tower
+  // Remember towers are placed starting from the one laying on the x-axis 
+  fTrns_Vector = dd4hep::rec::Vector3D(cos(fThetaOfCenter)*fTrns_Length,0,sin(fThetaOfCenter)*fTrns_Length);
+  
+  double dx1=fInnerR; // inner radius hardcoded in detector construction
+  double dxi=sin(fThetaOfCenter)*finnerR_new+innerSide_half*cos(fThetaOfCenter);
+  double dxi2=sin(fThetaOfCenter2)*finnerR_new2+innerSide_half2*cos(fThetaOfCenter2);
+  Ratio=dxi/dx1;
+  Ratio2=dxi2/dx1;
 
-    // This vector are distributed over the plane of the tower closest to the barrel
-    // The difference between fV1 and fV2 (fV3 and fV4) is the correction of finnerR_new+fTowerHeight that meake the vector start at the begin and end of the tower surface
-    fV1 = dd4hep::rec::Vector3D(
-			(Ratio2)*(cos(fThetaOfCenter)*finnerR_new+sin(fThetaOfCenter)*finnerR_new*tan(fDeltaTheta/2.)),
-			0,
-			sin(fThetaOfCenter)*finnerR_new-sin(fThetaOfCenter)*finnerR_new*tan(fDeltaTheta/2.)
-			);
-        
-    std::cout<<fV1.x()/mm<<" "<<fV1.y()/mm<<" "<<fV1.z()/mm<<" fV1"<<std::endl;        
-    fV2 = dd4hep::rec::Vector3D(
-			(Ratio2)*(cos(fThetaOfCenter)*(finnerR_new+fTowerHeight)+sin(fThetaOfCenter)*(finnerR_new+fTowerHeight)*tan(fDeltaTheta/2.)),
-			0,
-			sin(fThetaOfCenter)*(finnerR_new+fTowerHeight)-sin(fThetaOfCenter)*(finnerR_new+fTowerHeight)*tan(fDeltaTheta/2.)
-			);
+  // These vectors are distributed over the plane of the tower closest to the barrel
+  // The difference between fV1 and fV2 (fV3 and fV4) is the correction of finnerR_new+fTowerHeight that meake the vector start at the begin and end of the tower surface
+  fV1 = dd4hep::rec::Vector3D(
+		    (Ratio2)*(cos(fThetaOfCenter)*finnerR_new+sin(fThetaOfCenter)*finnerR_new*tan(fDeltaTheta/2.)),
+		    0,
+		    sin(fThetaOfCenter)*finnerR_new-sin(fThetaOfCenter)*finnerR_new*tan(fDeltaTheta/2.)
+		    );
+ 
+  fV2 = dd4hep::rec::Vector3D(
+		    (Ratio2)*(cos(fThetaOfCenter)*(finnerR_new+fTowerHeight)+sin(fThetaOfCenter)*(finnerR_new+fTowerHeight)*tan(fDeltaTheta/2.)),
+	            0,
+		    sin(fThetaOfCenter)*(finnerR_new+fTowerHeight)-sin(fThetaOfCenter)*(finnerR_new+fTowerHeight)*tan(fDeltaTheta/2.)
+		    );
 
-    std::cout<<fV2.x()/mm<<" "<<fV2.y()/mm<<" "<<fV2.z()/mm<<" fV2"<<std::endl;        
-    fV3 = dd4hep::rec::Vector3D(
-			(Ratio)*(cos(fThetaOfCenter)*finnerR_new-sin(fThetaOfCenter)*finnerR_new*tan(fDeltaTheta/2.)),
-			0,
-			sin(fThetaOfCenter)*finnerR_new+sin(fThetaOfCenter)*finnerR_new*tan(fDeltaTheta/2.)
-			);
-	
-    std::cout<<fV3.x()/mm<<" "<<fV3.y()/mm<<" "<<fV3.z()/mm<<" fV3"<<std::endl;        
-    fV4 = dd4hep::rec::Vector3D(
-			(Ratio)*(cos(fThetaOfCenter)*(finnerR_new+fTowerHeight)-sin(fThetaOfCenter)*(finnerR_new+fTowerHeight)*tan(fDeltaTheta/2.)),
-			0,
-			sin(fThetaOfCenter)*(finnerR_new+fTowerHeight)+sin(fThetaOfCenter)*(finnerR_new+fTowerHeight)*tan(fDeltaTheta/2.)
-			);
-    std::cout<<fV4.x()/mm<<" "<<fV4.y()/mm<<" "<<fV4.z()/mm<<" fV4"<<std::endl;        
+  fV3 = dd4hep::rec::Vector3D(
+		    (Ratio)*(cos(fThetaOfCenter)*finnerR_new-sin(fThetaOfCenter)*finnerR_new*tan(fDeltaTheta/2.)),
+		    0,
+		    sin(fThetaOfCenter)*finnerR_new+sin(fThetaOfCenter)*finnerR_new*tan(fDeltaTheta/2.)
+		    );
+
+  fV4 = dd4hep::rec::Vector3D(
+		    (Ratio)*(cos(fThetaOfCenter)*(finnerR_new+fTowerHeight)-sin(fThetaOfCenter)*(finnerR_new+fTowerHeight)*tan(fDeltaTheta/2.)),
+		    0,
+		    sin(fThetaOfCenter)*(finnerR_new+fTowerHeight)+sin(fThetaOfCenter)*(finnerR_new+fTowerHeight)*tan(fDeltaTheta/2.)
+		    );
 
 }
 
+// Get 8 vector/points for the tower Trap edges
 inline void DREndcapTubeHelper::Getpt(dd4hep::rec::Vector3D *pt) {
-	double innerSide_half = finnerR_new*tan(fDeltaTheta/2.);
-	double outerSide_half= (finnerR_new+fTowerHeight)*tan(fDeltaTheta/2.);
+  double innerSide_half = finnerR_new*tan(fDeltaTheta/2.);
+  double outerSide_half= (finnerR_new+fTowerHeight)*tan(fDeltaTheta/2.);
 
-	if(fRbool == 1){
-		pt[0]=dd4hep::rec::Vector3D(-(fV1.x()*tan(fPhiZRot/2.)),-innerSide_half,-fTowerHeight/2.);
-		pt[1]=dd4hep::rec::Vector3D((fV1.x()*tan(fPhiZRot/2.)),-innerSide_half,-fTowerHeight/2.);
-		pt[2]=dd4hep::rec::Vector3D(-(fV3.x()*tan(fPhiZRot/2.)),innerSide_half,-fTowerHeight/2.);
-		pt[3]=dd4hep::rec::Vector3D((fV3.x()*tan(fPhiZRot/2.)),innerSide_half,-fTowerHeight/2.);
-		pt[4]=dd4hep::rec::Vector3D(-(fV2.x()*tan(fPhiZRot/2.)),-outerSide_half,fTowerHeight/2.);
-		pt[5]=dd4hep::rec::Vector3D((fV2.x()*tan(fPhiZRot/2.)),-outerSide_half,fTowerHeight/2.);
-		pt[6]=dd4hep::rec::Vector3D(-(fV4.x()*tan(fPhiZRot/2.)),outerSide_half,fTowerHeight/2.);
-		pt[7]=dd4hep::rec::Vector3D((fV4.x()*tan(fPhiZRot/2.)),outerSide_half,fTowerHeight/2.);
-	}
-
-	else{
-		pt[0]=dd4hep::rec::Vector3D(-(fV1.x()*tan(fPhiZRot/2.)),-innerSide_half,-fTowerHeight/2.);
-		pt[1]=dd4hep::rec::Vector3D((fV1.x()*tan(fPhiZRot/2.)),-innerSide_half,-fTowerHeight/2.);
-		pt[2]=dd4hep::rec::Vector3D(-(fV3.x()*tan(fPhiZRot/2.)),innerSide_half,-fTowerHeight/2.);
-		pt[3]=dd4hep::rec::Vector3D((fV3.x()*tan(fPhiZRot/2.)),innerSide_half,-fTowerHeight/2.);
-		pt[4]=dd4hep::rec::Vector3D(-(fV2.x()*tan(fPhiZRot/2.)),-outerSide_half,fTowerHeight/2.);
-		pt[5]=dd4hep::rec::Vector3D((fV2.x()*tan(fPhiZRot/2.)),-outerSide_half,fTowerHeight/2.);
-		pt[6]=dd4hep::rec::Vector3D(-(fV4.x()*tan(fPhiZRot/2.)),outerSide_half,fTowerHeight/2.);
-		pt[7]=dd4hep::rec::Vector3D((fV4.x()*tan(fPhiZRot/2.)),outerSide_half,fTowerHeight/2.);
-	}
-	
-	//cout<<"ENDCAP Y_int = "<<innerSide_half*2<<" Y_out = "<<outerSide_half*2<<" X_inn = "<<pt[3](0)-pt[2](0)<<" X_out = "<<pt[7](0)-pt[6](0)<<std::endl;
-//cout<<std::endl;
+  if(fRbool == 1){
+    pt[0]=dd4hep::rec::Vector3D(-(fV1.x()*tan(fPhiZRot/2.)),-innerSide_half,-fTowerHeight/2.);
+    pt[1]=dd4hep::rec::Vector3D((fV1.x()*tan(fPhiZRot/2.)),-innerSide_half,-fTowerHeight/2.);
+    pt[2]=dd4hep::rec::Vector3D(-(fV3.x()*tan(fPhiZRot/2.)),innerSide_half,-fTowerHeight/2.);
+    pt[3]=dd4hep::rec::Vector3D((fV3.x()*tan(fPhiZRot/2.)),innerSide_half,-fTowerHeight/2.);
+    pt[4]=dd4hep::rec::Vector3D(-(fV2.x()*tan(fPhiZRot/2.)),-outerSide_half,fTowerHeight/2.);
+    pt[5]=dd4hep::rec::Vector3D((fV2.x()*tan(fPhiZRot/2.)),-outerSide_half,fTowerHeight/2.);
+    pt[6]=dd4hep::rec::Vector3D(-(fV4.x()*tan(fPhiZRot/2.)),outerSide_half,fTowerHeight/2.);
+    pt[7]=dd4hep::rec::Vector3D((fV4.x()*tan(fPhiZRot/2.)),outerSide_half,fTowerHeight/2.);
+  }
+  else{
+    pt[0]=dd4hep::rec::Vector3D(-(fV1.x()*tan(fPhiZRot/2.)),-innerSide_half,-fTowerHeight/2.);
+    pt[1]=dd4hep::rec::Vector3D((fV1.x()*tan(fPhiZRot/2.)),-innerSide_half,-fTowerHeight/2.);
+    pt[2]=dd4hep::rec::Vector3D(-(fV3.x()*tan(fPhiZRot/2.)),innerSide_half,-fTowerHeight/2.);
+    pt[3]=dd4hep::rec::Vector3D((fV3.x()*tan(fPhiZRot/2.)),innerSide_half,-fTowerHeight/2.);
+    pt[4]=dd4hep::rec::Vector3D(-(fV2.x()*tan(fPhiZRot/2.)),-outerSide_half,fTowerHeight/2.);
+    pt[5]=dd4hep::rec::Vector3D((fV2.x()*tan(fPhiZRot/2.)),-outerSide_half,fTowerHeight/2.);
+    pt[6]=dd4hep::rec::Vector3D(-(fV4.x()*tan(fPhiZRot/2.)),outerSide_half,fTowerHeight/2.);
+    pt[7]=dd4hep::rec::Vector3D((fV4.x()*tan(fPhiZRot/2.)),outerSide_half,fTowerHeight/2.);
+  }
 }
 
+// Get origin on tower within its phi slice/stave
 inline dd4hep::rec::Vector3D DREndcapTubeHelper::GetOrigin(int i){
 
-	if(fCalBasicBool==0) 
-	{std::cout<<"fCalBasicBool = 0"<<std::endl; 
-		return dd4hep::rec::Vector3D();
-	}
-	else{ 
-		if(fRbool==1){
-			double x,y,z;
-			x=cos(i*fPhiZRot)*fTrns_Vector.x();
-			y=sin(i*fPhiZRot)*fTrns_Vector.x();
-			z=fTrns_Vector.z();
+  if(fCalBasicBool==0) {
+    std::cout<<"fCalBasicBool = 0"<<std::endl; 
+    return dd4hep::rec::Vector3D();
+  }
+  else { 
+    if(fRbool==1){
+      double x,y,z;
+      x=cos(i*fPhiZRot)*fTrns_Vector.x();
+      y=sin(i*fPhiZRot)*fTrns_Vector.x();
+      z=fTrns_Vector.z();
 
-			return dd4hep::rec::Vector3D(x,y,z);
-		}
+      return dd4hep::rec::Vector3D(x,y,z);
+    }
+    else {
+      double x,y,z;
+      x=cos(i*fPhiZRot)*fTrns_Vector.x();
+      y=sin(i*fPhiZRot)*fTrns_Vector.x();
+      z=-fTrns_Vector.z();
 
-		else
-		{
-			double x,y,z;
-			x=cos(i*fPhiZRot)*fTrns_Vector.x();
-			y=sin(i*fPhiZRot)*fTrns_Vector.x();
-			z=-fTrns_Vector.z();
-
-			return dd4hep::rec::Vector3D(x,y,z);
-		}
-	}
+      return dd4hep::rec::Vector3D(x,y,z);
+    }
+  }
 }
 
 // This method finds the "intersection" between a ZLine (tube) and a Plane (tower face).

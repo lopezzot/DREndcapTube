@@ -190,8 +190,6 @@ static Ref_t create_detector(Detector &description, xml_h e, SensitiveDetector /
          pTheta = std::atan(fThetaCphi/std::cos(pPhi));
     } // end of Trap parameters calculation
     
-    std::cout<<"--> Tower "<<i<<" being constructed"<<std::endl;
-
     Trap tower("phiER", pDz, pTheta, pPhi, pDy1, pDx1, pDx2, pAlp1, pDy2, pDx3, pDx4, pAlp2);
     Volume towerLog("towerLog", tower, description.material(x_tower.attr<std::string>(_U(material))));
     towerLog.setVisAttributes(description, x_tower.visStr());
@@ -202,6 +200,7 @@ static Ref_t create_detector(Detector &description, xml_h e, SensitiveDetector /
     Vector3D c = Helper.GetOrigin(0); // Get origin of tower
     Vector3D c_new(-c.y(),c.z(),c.x()-(innerR+0.5*length));
     //if(i<35) { // Place towers up to 35, this "if" is just a protection in case the loop range is changed
+    //    std::cout<<"----> Tower "<<i<<" being constructed"<<std::endl;
     //    Transform3D tower_trnsform(rotX*rotY*rotZ, Position(c_new.x(),c_new.y(),c_new.z())); 
     //    PlacedVolume towerPlaced = phiERLog.placeVolume(towerLog,i,tower_trnsform);
     //    towerPlaced.addPhysVolID("tower",i);
