@@ -113,7 +113,7 @@ inline void DREndcapTubeHelper::CalBasic(){
     // Half size at front face of first tower given by effective radius times tan of half delta
     double innerSide_half = finnerR_new*tan(fDeltaTheta/2.);
     // Half size at back face
-    double outerSide_half = (finnerR_new+fTowerHeight)*tan(fDeltaTheta/2.);	
+    // double outerSide_half = (finnerR_new+fTowerHeight)*tan(fDeltaTheta/2.);	
     
     // Half size at front face of second tower (same as above)
     double innerSide_half2 = finnerR_new2*tan(fDeltaTheta2/2.);
@@ -190,9 +190,6 @@ inline void DREndcapTubeHelper::Getpt(dd4hep::rec::Vector3D *pt) {
 		pt[7]=dd4hep::rec::Vector3D((fV4.x()*tan(fPhiZRot/2.)),outerSide_half,fTowerHeight/2.);
 	}
 	
-        for(std::size_t i=0;i<8;i++){
-            //std::cout<<"pt at i "<<pt[i].x()/mm<<" "<<pt[i].y()/mm<<" "<<pt[i].z()/mm<<std::endl;
-        }
 	//cout<<"ENDCAP Y_int = "<<innerSide_half*2<<" Y_out = "<<outerSide_half*2<<" X_inn = "<<pt[3](0)-pt[2](0)<<" X_out = "<<pt[7](0)-pt[6](0)<<std::endl;
 //cout<<std::endl;
 }

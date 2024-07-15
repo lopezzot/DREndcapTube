@@ -12,6 +12,7 @@
 
 // Includers from stl
 #include <iostream>
+#include <array>
 
 using namespace dd4hep;
 using namespace dd4hep::rec; // for dd4hep::rec::Vector3D
@@ -268,6 +269,7 @@ static Ref_t create_detector(Detector &description, xml_h e, SensitiveDetector /
          auto capillaryLength = Helper.GetTubeLength(pt,capillaryPos); // calculate tube length
          if(capillaryLength == length){
            PlacedVolume capillaryPlaced = towerLog.placeVolume(capillary_SLog, 1000*k+j, Position(x_tube, y_tube, 0.));
+           capillaryPlaced.addPhysVolID("capillary_S", 1000*k+j);
          }
          else if(capillaryLength > 5.0*cm){
            // Note: the root visualizer does not display tubes with capillaryLength < 4.5 cm.
@@ -279,6 +281,7 @@ static Ref_t create_detector(Detector &description, xml_h e, SensitiveDetector /
            Volume capillaryShortLog("capillaryShortLog",capillaryShort,description.material(x_capillary_S.attr<std::string>(_U(material))));
            capillaryShortLog.setVisAttributes(description, x_capillary_S.visStr());
            PlacedVolume capillaryShortPlaced = towerLog.placeVolume(capillaryShortLog, 1000*k+j, Position(x_tube, y_tube, length/2.-capillaryLength/2.+TubeLengthOffset/2.));
+           capillaryShortPlaced.addPhysVolID("capillary_S", 1000*k+j);
          }
          else {;}
 
@@ -300,6 +303,7 @@ static Ref_t create_detector(Detector &description, xml_h e, SensitiveDetector /
            auto capillaryLength_C = Helper.GetTubeLength(pt,capillaryPos_C);
            if(capillaryLength_C == length){
              PlacedVolume capillaryPlaced_C = towerLog.placeVolume(capillary_CLog, 100000*k+j, Position(x_tube_C, y_tube_C, 0.));
+             capillaryPlaced_C.addPhysVolID("capillary_C", 100000*k+j);
            } 
            else if(capillaryLength_C > 5.0*cm){
                Tube capillaryShort_C(0.*mm, tubeRadius, (capillaryLength_C-TubeLengthOffset)/2., 2*M_PI); // reduced capillary length
@@ -307,6 +311,7 @@ static Ref_t create_detector(Detector &description, xml_h e, SensitiveDetector /
                Volume capillaryShortLog_C("capillaryShortLog_C",capillaryShort_C,description.material(x_capillary_C.attr<std::string>(_U(material))));
                capillaryShortLog_C.setVisAttributes(description, x_capillary_C.visStr());
                PlacedVolume capillaryShortPlaced_C = towerLog.placeVolume(capillaryShortLog_C, 100000*k+j, Position(x_tube_C, y_tube_C, length/2.-capillaryLength_C/2.+TubeLengthOffset/2.));
+               capillaryShortPlaced_C.addPhysVolID("capillary_C", 100000*k+j);
            }
            else {;}
          }
