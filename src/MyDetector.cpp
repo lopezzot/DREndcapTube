@@ -12,12 +12,9 @@
 
 // Includers from stl
 #include <iostream>
-#include <map>
-#include <cmath>
-#include <array>
 
 using namespace dd4hep;
-using namespace dd4hep::rec;
+using namespace dd4hep::rec; // for dd4hep::rec::Vector3D
 
 // Includers from project files
 #include "DREndcapTube.hh"
@@ -335,7 +332,7 @@ static Ref_t create_detector(Detector &description, xml_h e, SensitiveDetector /
   DetElement  sdet(det_name,x_det.id());
   // Then "Place the subdetector envelope into its mother (typically the top level (world) volume)."
   Volume motherVolume = description.pickMotherVolume(sdet);
-  // Place the water box (tank) inside the mother volume
+  // Place the tank container inside the mother volume
   PlacedVolume tankPlace = motherVolume.placeVolume(tank_vol);
   tankPlace.addPhysVolID("tank",x_det.id());
   sdet.setPlacement(tankPlace);
