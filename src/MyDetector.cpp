@@ -8,9 +8,6 @@
 
 // Includers from DD4hep
 #include <DD4hep/DetFactoryHelper.h>
-#include <DD4hep/OpticalSurfaces.h>
-#include <DD4hep/Printout.h>
-#include <DD4hep/Detector.h>
 #include "DDRec/Vector3D.h"
 
 // Includers from stl
@@ -20,7 +17,6 @@
 #include <array>
 
 using namespace dd4hep;
-using namespace dd4hep::detail;
 using namespace dd4hep::rec;
 
 // Includers from project files
