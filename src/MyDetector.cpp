@@ -122,14 +122,14 @@ static Ref_t create_detector(Detector &description, xml_h e, SensitiveDetector /
     RotationX rotx(M_PI);
     RotationY roty(M_PI);
     Transform3D slice_trnsform(rotz1*rotz2*rotx*roty, Position(0,0,(innerR)*tan(thetaB)+length/2.)); 
-    PlacedVolume phiERPlaced = tank_vol.placeVolume(phiERLog,j,slice_trnsform);
-    phiERPlaced.addPhysVolID("phiERPlace",j);
+    PlacedVolume phiERPlaced = tank_vol.placeVolume(phiERLog,j+1,slice_trnsform); //copynumber avoids 0
+    phiERPlaced.addPhysVolID("phiERPlace",j+1); // copynumber avoids 0
 
     // Placement of left endcap (negative z-coordinate)
     RotationY rotyleft(0.);
     Transform3D slice_trnsformleft(rotz1*rotz2*rotx*rotyleft, Position(0,0,-1.*((innerR)*tan(thetaB)+length/2.))); 
-    PlacedVolume phiELPlaced = tank_vol.placeVolume(phiERLog,-j,slice_trnsformleft);
-    phiELPlaced.addPhysVolID("phiELPlace",-j);
+    PlacedVolume phiELPlaced = tank_vol.placeVolume(phiERLog,-j-1,slice_trnsformleft); // copynumber avoids 0
+    phiELPlaced.addPhysVolID("phiELPlace",-j); // copynumber avoids 0
   } // end of slice/stave placement
 
   // Create an S tube with full tower length
