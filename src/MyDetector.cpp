@@ -183,6 +183,7 @@ static Ref_t create_detector(Detector &description, xml_h e, SensitiveDetector /
   #ifdef COUNTTUBES
   unsigned int totalTubeNo{0};
   unsigned int tubeNo{0};
+  double totalTubeLength{0.};
   #endif
 
   // Loop over tower number, stop at tower 35 to leave room for beam pipe
@@ -294,6 +295,7 @@ static Ref_t create_detector(Detector &description, xml_h e, SensitiveDetector /
            capillaryPlaced.addPhysVolID("capillary_S", 1000*k+j);
            #ifdef COUNTTUBES
            tubeNo++;
+           totalTubeLength += tower_height;
            #endif
          }
          else if(capillaryLength > 5.0*cm){
@@ -319,6 +321,7 @@ static Ref_t create_detector(Detector &description, xml_h e, SensitiveDetector /
            capillaryShortPlaced.addPhysVolID("capillary_S", 1000*k+j);
            #ifdef COUNTTUBES
            tubeNo++;
+           totalTubeLength += capillaryLength; // neglecting the offset
            #endif
          }
          else {;}
@@ -339,11 +342,12 @@ static Ref_t create_detector(Detector &description, xml_h e, SensitiveDetector /
            double y_tube_C = y_tube + y_pitch; 
            Vector3D capillaryPos_C(x_tube_C, y_tube_C, length/2.);
            auto capillaryLength_C = Helper.GetTubeLength(pt,capillaryPos_C);
-           if(std::fabs(capillaryLength-length) < 0.0001*mm){
+           if(std::fabs(capillaryLength_C-length) < 0.0001*mm){
              PlacedVolume capillaryPlaced_C = towerLog.placeVolume(capillary_CLog, 100000*k+j, Position(x_tube_C, y_tube_C, 0.));
              capillaryPlaced_C.addPhysVolID("capillary_C", 100000*k+j);
              #ifdef COUNTTUBES
              tubeNo++;
+             totalTubeLength += tower_height;
              #endif
            } 
            else if(capillaryLength_C > 5.0*cm){
@@ -365,6 +369,7 @@ static Ref_t create_detector(Detector &description, xml_h e, SensitiveDetector /
                capillaryShortPlaced_C.addPhysVolID("capillary_C", 100000*k+j);
                #ifdef COUNTTUBES
                tubeNo++;
+               totalTubeLength += capillaryLength_C; // neglecting the offset
                #endif
            }
            else {;}
@@ -390,7 +395,7 @@ static Ref_t create_detector(Detector &description, xml_h e, SensitiveDetector /
 
   #ifdef COUNTTUBES
   std::cout<<"--> Number of tubes per stave/phi-slice "<<totalTubeNo<<std::endl;
-  std::cout<<"--> Number of tubes for both endcaps "<<totalTubeNo*NbOfZRot*2<<std::endl;
+  std::cout<<"--> Number of tubes for both endcaps "<<totalTubeNo*NbOfZRot*2<<" and total length "<<(NbOfZRot*2*totalTubeLength)/km<<" km"<<std::endl;
   #endif
 
   // Create a (DetElement) corresponding to MyDetector.
