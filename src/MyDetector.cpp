@@ -21,6 +21,8 @@ using namespace dd4hep::rec; // for dd4hep::rec::Vector3D
 // Includers from project files
 #include "DREndcapTube.hh"
 
+#define COUNTTUBES // if defined it counts the tubes in each tower
+
 // Create the endcap calorimeter
 //
 static Ref_t create_detector(Detector &description, xml_h e, SensitiveDetector /* sens */)  {
@@ -58,9 +60,10 @@ static Ref_t create_detector(Detector &description, xml_h e, SensitiveDetector /
 
   // Hardcoded parameters (not supposed to be changed)
   constexpr double thetaB{M_PI/4}; // theta at the end of barrel (45 deg)
-  constexpr int NbOfEndcap{39};    // number of eta towers for the endcap.
+  constexpr int NbOfEndcap{40};    // number of eta towers for the endcap.
                                    // De facto I will stop at 35 to leave
                                    // room for the beam pipe.
+  constexpr int NbOfEndcapReduced{35};
   // Length correction to be applied to capillary tubes
   // with length reduced by the intersection
   // with the tower's planes.
@@ -172,13 +175,21 @@ static Ref_t create_detector(Detector &description, xml_h e, SensitiveDetector /
   double thetaofcenter2 = 0.; // theta angle to center of next tower
   // I fix delta theta of every tower to be the same for every tower
   double deltatheta_endcap[40] = {0.};
-  for(int i=0;i<NbOfEndcap+1;i++) deltatheta_endcap[i] = M_PI/4/(NbOfEndcap+1);
+  for(int i=0;i<NbOfEndcap;i++) deltatheta_endcap[i] = M_PI/4/(NbOfEndcap);
   double thetaE = 0.;
-  for(int i=0;i<NbOfEndcap+1;i++) thetaE += deltatheta_endcap[i];
+  for(int i=0;i<NbOfEndcap;i++) thetaE += deltatheta_endcap[i];
   double fulltheta = thetaE; // 45 deg by construction
 
+  #ifdef COUNTTUBES
+  unsigned int totalTubeNo{0};
+  unsigned int tubeNo{0};
+  #endif
+
   // Loop over tower number, stop at tower 35 to leave room for beam pipe
-  for(int i=0;i<NbOfEndcap-1;i++){
+  for(int i=0;i<NbOfEndcapReduced;i++){
+    #ifdef COUNTTUBES
+    tubeNo = 0;
+    #endif
 
     // Center of first (highest) tower is 45 deg - deltatheta_endcap[1]/2
     thetaofcenter = fulltheta-deltatheta_endcap[i]/2.;
@@ -227,8 +238,13 @@ static Ref_t create_detector(Detector &description, xml_h e, SensitiveDetector /
     RotationZ rotZ(0.);
     Vector3D c = Helper.GetOrigin(0); // Get origin of tower
     Vector3D c_new(-c.y(),c.z(),c.x()-(innerR+0.5*length));
-    if(i<35) { // Place towers up to 35, this "if" is just a protection in case the loop range is changed
+    if(i<NbOfEndcapReduced) { // Place towers up to 35, this "if" is just a protection in case the loop range is changed
+        #ifndef COUNTTUBES
         std::cout<<"----> Tower "<<i<<" being constructed"<<std::endl;
+        #endif
+        #ifdef COUNTTUBES
+        std::cout<<"----> Tower "<<i<<" being constructed";
+        #endif
         Transform3D tower_trnsform(rotX*rotY*rotZ, Position(c_new.x(),c_new.y(),c_new.z())); 
         PlacedVolume towerPlaced = phiERLog.placeVolume(towerLog,i,tower_trnsform);
         towerPlaced.addPhysVolID("tower",i);
@@ -276,6 +292,9 @@ static Ref_t create_detector(Detector &description, xml_h e, SensitiveDetector /
          if(std::fabs(capillaryLength-length) < 0.0001*mm){
            PlacedVolume capillaryPlaced = towerLog.placeVolume(capillary_SLog, 1000*k+j, Position(x_tube, y_tube, 0.));
            capillaryPlaced.addPhysVolID("capillary_S", 1000*k+j);
+           #ifdef COUNTTUBES
+           tubeNo++;
+           #endif
          }
          else if(capillaryLength > 5.0*cm){
            // Note: the root visualizer does not display tubes with capillaryLength < 4.5 cm.
@@ -298,6 +317,9 @@ static Ref_t create_detector(Detector &description, xml_h e, SensitiveDetector /
 
            PlacedVolume capillaryShortPlaced = towerLog.placeVolume(capillaryShortLog, 1000*k+j, Position(x_tube, y_tube, length/2.-capillaryLength/2.+TubeLengthOffset/2.));
            capillaryShortPlaced.addPhysVolID("capillary_S", 1000*k+j);
+           #ifdef COUNTTUBES
+           tubeNo++;
+           #endif
          }
          else {;}
 
@@ -320,6 +342,9 @@ static Ref_t create_detector(Detector &description, xml_h e, SensitiveDetector /
            if(std::fabs(capillaryLength-length) < 0.0001*mm){
              PlacedVolume capillaryPlaced_C = towerLog.placeVolume(capillary_CLog, 100000*k+j, Position(x_tube_C, y_tube_C, 0.));
              capillaryPlaced_C.addPhysVolID("capillary_C", 100000*k+j);
+             #ifdef COUNTTUBES
+             tubeNo++;
+             #endif
            } 
            else if(capillaryLength_C > 5.0*cm){
                Tube capillaryShort_C(0.*mm, tubeRadius, (capillaryLength_C-TubeLengthOffset)/2., 2*M_PI); // reduced capillary length
@@ -338,6 +363,9 @@ static Ref_t create_detector(Detector &description, xml_h e, SensitiveDetector /
 
                PlacedVolume capillaryShortPlaced_C = towerLog.placeVolume(capillaryShortLog_C, 100000*k+j, Position(x_tube_C, y_tube_C, length/2.-capillaryLength_C/2.+TubeLengthOffset/2.));
                capillaryShortPlaced_C.addPhysVolID("capillary_C", 100000*k+j);
+               #ifdef COUNTTUBES
+               tubeNo++;
+               #endif
            }
            else {;}
          }
@@ -354,7 +382,16 @@ static Ref_t create_detector(Detector &description, xml_h e, SensitiveDetector /
     // Update parameters
     Helper.Getpt(pt);
     fulltheta = fulltheta-deltatheta_endcap[i];
+    #ifdef COUNTTUBES
+    totalTubeNo += tubeNo;
+    std::cout<<" with "<<tubeNo<<" tubes"<<std::endl;
+    #endif
   } //End of towers creation and placement
+
+  #ifdef COUNTTUBES
+  std::cout<<"--> Number of tubes per stave/phi-slice "<<totalTubeNo<<std::endl;
+  std::cout<<"--> Number of tubes for both endcaps "<<totalTubeNo*NbOfZRot*2<<std::endl;
+  #endif
 
   // Create a (DetElement) corresponding to MyDetector.
   // From DD4hep docs https://dd4hep.web.cern.ch/dd4hep/usermanuals/DD4hepManual/DD4hepManualch2.html
