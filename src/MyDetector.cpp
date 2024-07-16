@@ -116,14 +116,20 @@ static Ref_t create_detector(Detector &description, xml_h e, SensitiveDetector /
   // Rotate the endcap R slice around the Z axis
   for(std::size_t j=0;j<static_cast<std::size_t>(NbOfZRot);j++){
 
+    // Placement of right endcap (positive z-coordinate)
     RotationZ rotz1(M_PI/2.);    // here I discovered that dd4hep rotations around Z are inverted
     RotationZ rotz2(j*phi_unit); // w.r.t. Geant4 (+->-)
     RotationX rotx(M_PI);
     RotationY roty(M_PI);
     Transform3D slice_trnsform(rotz1*rotz2*rotx*roty, Position(0,0,(innerR)*tan(thetaB)+length/2.)); 
+    PlacedVolume phiERPlaced = tank_vol.placeVolume(phiERLog,j+1,slice_trnsform); //copynumber avoids 0
+    phiERPlaced.addPhysVolID("phiERPlace",j+1); // copynumber avoids 0
 
-    //PlacedVolume phiERPlaced = tank_vol.placeVolume(phiERLog,j,slice_trnsform);
-    //phiERPlaced.addPhysVolID("phiERPlace",j);
+    // Placement of left endcap (negative z-coordinate)
+    RotationY rotyleft(0.);
+    Transform3D slice_trnsformleft(rotz1*rotz2*rotx*rotyleft, Position(0,0,-1.*((innerR)*tan(thetaB)+length/2.))); 
+    PlacedVolume phiELPlaced = tank_vol.placeVolume(phiERLog,-j-1,slice_trnsformleft); // copynumber avoids 0
+    phiELPlaced.addPhysVolID("phiELPlace",-j); // copynumber avoids 0
   } // end of slice/stave placement
 
   // Create an S tube with full tower length
@@ -199,18 +205,18 @@ static Ref_t create_detector(Detector &description, xml_h e, SensitiveDetector /
     RotationZ rotZ(0.);
     Vector3D c = Helper.GetOrigin(0); // Get origin of tower
     Vector3D c_new(-c.y(),c.z(),c.x()-(innerR+0.5*length));
-    //if(i<35) { // Place towers up to 35, this "if" is just a protection in case the loop range is changed
-    //    std::cout<<"----> Tower "<<i<<" being constructed"<<std::endl;
-    //    Transform3D tower_trnsform(rotX*rotY*rotZ, Position(c_new.x(),c_new.y(),c_new.z())); 
-    //    PlacedVolume towerPlaced = phiERLog.placeVolume(towerLog,i,tower_trnsform);
-    //    towerPlaced.addPhysVolID("tower",i);
-    //}
+    if(i<35) { // Place towers up to 35, this "if" is just a protection in case the loop range is changed
+        std::cout<<"----> Tower "<<i<<" being constructed"<<std::endl;
+        Transform3D tower_trnsform(rotX*rotY*rotZ, Position(c_new.x(),c_new.y(),c_new.z())); 
+        PlacedVolume towerPlaced = phiERLog.placeVolume(towerLog,i,tower_trnsform);
+        towerPlaced.addPhysVolID("tower",i);
+    }
     // Or, to debug, place towers one next to each other in tank volume
-    if(i<35) {
+    /*if(i<35) {
         double z = static_cast<int>(i/15)*(length+40*cm);
         double x = (i-static_cast<int>(i/15)*15)*100*cm - 5*m;
         tank_vol.placeVolume(towerLog,i,Position(-1.*x,0.,-1.*z));
-    }
+    }*/
 
     // Capillary placement inside tower (both S and C)
     //
