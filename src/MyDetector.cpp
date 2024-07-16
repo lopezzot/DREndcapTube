@@ -47,8 +47,14 @@ static Ref_t create_detector(Detector &description, xml_h e, SensitiveDetector /
   xml_det_t   x_tower  = x_det.child(_Unicode(tower));
   xml_det_t   x_capillary_S = x_det.child(_Unicode(tube_S));
   xml_det_t   x_capillary_C = x_det.child(_Unicode(tube_C));
+  xml_det_t   x_clad_S = x_det.child(_Unicode(clad_S));
+  xml_det_t   x_clad_C = x_det.child(_Unicode(clad_C));
+  xml_det_t   x_core_S = x_det.child(_Unicode(core_S));
+  xml_det_t   x_core_C = x_det.child(_Unicode(core_C));
   const double tubeRadius = x_capillary_S.outer_radius();
   std::cout<<", tube radius "<<tubeRadius/mm<<" mm"<<std::endl;
+  const double cladRadius = x_clad_S.outer_radius();
+  const double coreRadius = x_core_S.outer_radius();
 
   // Hardcoded parameters (not supposed to be changed)
   constexpr double thetaB{M_PI/4}; // theta at the end of barrel (45 deg)
@@ -137,11 +143,27 @@ static Ref_t create_detector(Detector &description, xml_h e, SensitiveDetector /
   Tube capillary_S(0.*mm, tubeRadius, tower_height/2., 2*M_PI);
   Volume capillary_SLog("capillary_SLog",capillary_S,description.material(x_capillary_S.attr<std::string>(_U(material))));
   capillary_SLog.setVisAttributes(description, x_capillary_S.visStr());
+  Tube clad_S(0.*mm, cladRadius, tower_height/2., 2*M_PI); // cladding S
+  Volume clad_SLog("clad_SLog",clad_S,description.material(x_clad_S.attr<std::string>(_U(material))));
+  clad_SLog.setVisAttributes(description, x_clad_S.visStr());
+  /*PlacedVolume clad_SPlaced =*/ capillary_SLog.placeVolume(clad_SLog, 0, Position(0.,0.,0.));
+  Tube core_S(0.*mm, coreRadius, tower_height/2., 2*M_PI); // core S
+  Volume core_SLog("core_SLog",core_S,description.material(x_core_S.attr<std::string>(_U(material))));
+  core_SLog.setVisAttributes(description, x_core_S.visStr());
+  /*PlacedVolume core_SPlaced =*/ clad_SLog.placeVolume(core_SLog);
 
   // Create a C tube with full tower length
   Tube capillary_C(0.*mm, tubeRadius, tower_height/2., 2*M_PI);
   Volume capillary_CLog("capillary_CLog",capillary_C,description.material(x_capillary_C.attr<std::string>(_U(material))));
   capillary_CLog.setVisAttributes(description, x_capillary_C.visStr());
+  Tube clad_C(0.*mm, cladRadius, tower_height/2., 2*M_PI); // cladding C
+  Volume clad_CLog("clad_CLog",clad_C,description.material(x_clad_C.attr<std::string>(_U(material))));
+  clad_CLog.setVisAttributes(description, x_clad_C.visStr());
+  /*PlacedVolume clad_CPlaced =*/ capillary_CLog.placeVolume(clad_CLog, 0, Position(0.,0.,0.));
+  Tube core_C(0.*mm, coreRadius, tower_height/2., 2*M_PI); // core C
+  Volume core_CLog("core_CLog",core_C,description.material(x_core_C.attr<std::string>(_U(material))));
+  core_CLog.setVisAttributes(description, x_core_C.visStr());
+  /*PlacedVolume core_CPlaced =*/ clad_CLog.placeVolume(core_CLog);
 
   // Build the towers inside and endcap R slice
   //
@@ -156,7 +178,6 @@ static Ref_t create_detector(Detector &description, xml_h e, SensitiveDetector /
   double fulltheta = thetaE; // 45 deg by construction
 
   // Loop over tower number, stop at tower 35 to leave room for beam pipe
-  //for(int i=0;i<NbOfEndcap-1;i++){
   for(int i=0;i<NbOfEndcap-1;i++){
 
     // Center of first (highest) tower is 45 deg - deltatheta_endcap[1]/2
@@ -265,6 +286,16 @@ static Ref_t create_detector(Detector &description, xml_h e, SensitiveDetector /
                                                                                                   // by a fixed offset
            Volume capillaryShortLog("capillaryShortLog",capillaryShort,description.material(x_capillary_S.attr<std::string>(_U(material))));
            capillaryShortLog.setVisAttributes(description, x_capillary_S.visStr());
+
+           Tube cladShort_S(0.*mm, cladRadius, (capillaryLength-TubeLengthOffset)/2., 2*M_PI); // cladding S
+           Volume cladShort_SLog("cladShort_SLog",cladShort_S,description.material(x_clad_S.attr<std::string>(_U(material))));
+           cladShort_SLog.setVisAttributes(description, x_clad_S.visStr());
+           /*PlacedVolume cladShort_SPlaced =*/ capillaryShortLog.placeVolume(cladShort_SLog, 0, Position(0.,0.,0.));
+           Tube coreShort_S(0.*mm, coreRadius, (capillaryLength-TubeLengthOffset)/2., 2*M_PI); // core S
+           Volume coreShort_SLog("coreShort_SLog",coreShort_S,description.material(x_core_S.attr<std::string>(_U(material))));
+           coreShort_SLog.setVisAttributes(description, x_core_S.visStr());
+           /*PlacedVolume coreShort_SPlaced =*/ cladShort_SLog.placeVolume(coreShort_SLog);
+
            PlacedVolume capillaryShortPlaced = towerLog.placeVolume(capillaryShortLog, 1000*k+j, Position(x_tube, y_tube, length/2.-capillaryLength/2.+TubeLengthOffset/2.));
            capillaryShortPlaced.addPhysVolID("capillary_S", 1000*k+j);
          }
@@ -295,6 +326,16 @@ static Ref_t create_detector(Detector &description, xml_h e, SensitiveDetector /
                                                                                                           // by a fixed offset
                Volume capillaryShortLog_C("capillaryShortLog_C",capillaryShort_C,description.material(x_capillary_C.attr<std::string>(_U(material))));
                capillaryShortLog_C.setVisAttributes(description, x_capillary_C.visStr());
+
+               Tube cladShort_C(0.*mm, cladRadius, (capillaryLength_C-TubeLengthOffset)/2., 2*M_PI); // cladding C
+               Volume cladShort_CLog("cladShort_CLog",cladShort_C,description.material(x_clad_C.attr<std::string>(_U(material))));
+               cladShort_CLog.setVisAttributes(description, x_clad_C.visStr());
+               /*PlacedVolume cladShort_CPlaced =*/ capillaryShortLog_C.placeVolume(cladShort_CLog, 0, Position(0.,0.,0.));
+               Tube coreShort_C(0.*mm, coreRadius, (capillaryLength_C-TubeLengthOffset)/2., 2*M_PI); // core C
+               Volume coreShort_CLog("coreShort_CLog",coreShort_C,description.material(x_core_C.attr<std::string>(_U(material))));
+               coreShort_CLog.setVisAttributes(description, x_core_C.visStr());
+               /*PlacedVolume coreShort_CPlaced =*/ cladShort_CLog.placeVolume(coreShort_CLog);
+
                PlacedVolume capillaryShortPlaced_C = towerLog.placeVolume(capillaryShortLog_C, 100000*k+j, Position(x_tube_C, y_tube_C, length/2.-capillaryLength_C/2.+TubeLengthOffset/2.));
                capillaryShortPlaced_C.addPhysVolID("capillary_C", 100000*k+j);
            }
