@@ -13,6 +13,7 @@
 // Includers from stl
 #include <iostream>
 #include <array>
+#include <cmath>
 
 using namespace dd4hep;
 using namespace dd4hep::rec; // for dd4hep::rec::Vector3D
@@ -251,7 +252,7 @@ static Ref_t create_detector(Detector &description, xml_h e, SensitiveDetector /
          auto x_tube = x_start  + tubeRadius + j*(tubeDiameter);       // locate the center of the tube in x 
          Vector3D capillaryPos(x_tube, y_tube, length/2.);             // locate tube on tower back face
          auto capillaryLength = Helper.GetTubeLength(pt,capillaryPos); // calculate tube length
-         if(capillaryLength == length){
+         if(std::fabs(capillaryLength-length) < 0.0001*mm){
            PlacedVolume capillaryPlaced = towerLog.placeVolume(capillary_SLog, 1000*k+j, Position(x_tube, y_tube, 0.));
            capillaryPlaced.addPhysVolID("capillary_S", 1000*k+j);
          }
@@ -285,7 +286,7 @@ static Ref_t create_detector(Detector &description, xml_h e, SensitiveDetector /
            double y_tube_C = y_tube + y_pitch; 
            Vector3D capillaryPos_C(x_tube_C, y_tube_C, length/2.);
            auto capillaryLength_C = Helper.GetTubeLength(pt,capillaryPos_C);
-           if(capillaryLength_C == length){
+           if(std::fabs(capillaryLength-length) < 0.0001*mm){
              PlacedVolume capillaryPlaced_C = towerLog.placeVolume(capillary_CLog, 100000*k+j, Position(x_tube_C, y_tube_C, 0.));
              capillaryPlaced_C.addPhysVolID("capillary_C", 100000*k+j);
            } 
@@ -299,7 +300,7 @@ static Ref_t create_detector(Detector &description, xml_h e, SensitiveDetector /
            }
            else {;}
          }
-           
+ 
          // condition for stopping S capillary placement along x
          if(-1.*x_backplane+delta_x-x_tube < tubeDiameter+tubeRadius) break;
       } // end x loop
