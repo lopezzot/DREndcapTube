@@ -124,7 +124,8 @@ static Ref_t create_detector(Detector &description, xml_h e, SensitiveDetector /
   // Place logical volume containing the Endcap R slice multiple times
   //
   // Rotate the endcap R slice around the Z axis
-  for(std::size_t j=0;j<static_cast<std::size_t>(NbOfZRot);j++){
+  //for(std::size_t j=0;j<static_cast<std::size_t>(NbOfZRot);j++){
+  for(std::size_t j=9;j<10;j++){
 
     // Placement of right endcap (positive z-coordinate)
     RotationZ rotz1(M_PI/2.);    // here I discovered that dd4hep rotations around Z are inverted
@@ -132,14 +133,14 @@ static Ref_t create_detector(Detector &description, xml_h e, SensitiveDetector /
     RotationX rotx(M_PI);
     RotationY roty(M_PI);
     Transform3D slice_trnsform(rotz1*rotz2*rotx*roty, Position(0,0,(innerR)*tan(thetaB)+length/2.)); 
-    PlacedVolume phiERPlaced = tank_vol.placeVolume(phiERLog,j+1,slice_trnsform); //copynumber avoids 0
-    phiERPlaced.addPhysVolID("phiERPlace",j+1); // copynumber avoids 0
+    //PlacedVolume phiERPlaced = tank_vol.placeVolume(phiERLog,j+1,slice_trnsform); //copynumber avoids 0
+    //phiERPlaced.addPhysVolID("phiERPlace",j+1); // copynumber avoids 0
 
     // Placement of left endcap (negative z-coordinate)
     RotationY rotyleft(0.);
     Transform3D slice_trnsformleft(rotz1*rotz2*rotx*rotyleft, Position(0,0,-1.*((innerR)*tan(thetaB)+length/2.))); 
-    PlacedVolume phiELPlaced = tank_vol.placeVolume(phiERLog,-j-1,slice_trnsformleft); // copynumber avoids 0
-    phiELPlaced.addPhysVolID("phiELPlace",-j); // copynumber avoids 0
+    //PlacedVolume phiELPlaced = tank_vol.placeVolume(phiERLog,-j-1,slice_trnsformleft); // copynumber avoids 0
+    //phiELPlaced.addPhysVolID("phiELPlace",-j); // copynumber avoids 0
   } // end of slice/stave placement
 
   // Create an S tube with full tower length
@@ -256,6 +257,7 @@ static Ref_t create_detector(Detector &description, xml_h e, SensitiveDetector /
         double x = (i-static_cast<int>(i/15)*15)*100*cm - 5*m;
         tank_vol.placeVolume(towerLog,i,Position(-1.*x,0.,-1.*z));
     }*/
+    if(i==0)tank_vol.placeVolume(towerLog,i,Position(0.,0.,0.));
 
     // Capillary placement inside tower (both S and C)
     //
@@ -327,17 +329,18 @@ static Ref_t create_detector(Detector &description, xml_h e, SensitiveDetector /
          else {;}
 
          // Now C tubes are placed.
-         // First check there is enough room in y-direction, if not do not exit tube placement
-         if((-1.*y_backplane)-y_tube < (y_pitch+tubeRadius)) break; // do not place C tube row
+         // Check there is enough room in y-direction
+         bool IsLastRow_C = (-1.*y_backplane)-y_tube < y_pitch+tubeRadius ? true : false; 
          // This checks if there is enough room in x-direction to place a C tube after its S one
          bool IsLastTube_C = -1.*x_backplane+delta_x-x_tube < tubeDiameter ? true : false;
 
-         // After the S tube placement I place the closest C tube
+         // After the S tube placement I place the closest C tube above it
          // according to the fixed structure of the tubes placement (gluing)
          //
          // If the S tube below was not placed (too short) do not place the C either
-         // && if there is not enough room on x-direction do not place the C tube
-         if (capillaryLength > 5.0*cm && !IsLastTube_C){
+         // && if there is not enough room in x-direction do not place the C tube
+         // && if there is not enough room in y-direction do not place the C tube
+         if (capillaryLength > 5.0*cm && !IsLastTube_C && !IsLastRow_C){
            double x_tube_C = x_tube + tubeRadius;
            double y_tube_C = y_tube + y_pitch; 
            Vector3D capillaryPos_C(x_tube_C, y_tube_C, length/2.);
@@ -379,7 +382,7 @@ static Ref_t create_detector(Detector &description, xml_h e, SensitiveDetector /
          if(-1.*x_backplane+delta_x-x_tube < tubeDiameter+tubeRadius) break;
       } // end x loop
  
-      // Condition for stopping C capillary placement along y.
+      // Condition for stopping S capillary placement along y.
       // y_backplane is equal up and down so I can keep the same for exiting loop
       if((-1.*y_backplane)-y_tube < (2.*y_pitch+tubeRadius)) break;
     } // End y loop and tube placement
