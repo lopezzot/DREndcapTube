@@ -327,17 +327,18 @@ static Ref_t create_detector(Detector &description, xml_h e, SensitiveDetector /
          else {;}
 
          // Now C tubes are placed.
-         // First check there is enough room in y-direction, if not do not exit tube placement
-         if((-1.*y_backplane)-y_tube < (y_pitch+tubeRadius)) break; // do not place C tube row
-         // This checks if there is enough room in x-direction to place a C tube after its S one
+         // Check there is enough room in y-direction
+         bool IsLastRow_C = (-1.*y_backplane)-y_tube < y_pitch+tubeRadius ? true : false; 
+         // Check there is enough room in x-direction to place a C tube after its S one
          bool IsLastTube_C = -1.*x_backplane+delta_x-x_tube < tubeDiameter ? true : false;
 
-         // After the S tube placement I place the closest C tube
+         // After the S tube placement I place the closest C tube above it
          // according to the fixed structure of the tubes placement (gluing)
          //
          // If the S tube below was not placed (too short) do not place the C either
-         // && if there is not enough room on x-direction do not place the C tube
-         if (capillaryLength > 5.0*cm && !IsLastTube_C){
+         // && if there is not enough room in x-direction do not place the C tube
+         // && if there is not enough room in y-direction do not place the C tube
+         if (capillaryLength > 5.0*cm && !IsLastTube_C && !IsLastRow_C){
            double x_tube_C = x_tube + tubeRadius;
            double y_tube_C = y_tube + y_pitch; 
            Vector3D capillaryPos_C(x_tube_C, y_tube_C, length/2.);
@@ -379,7 +380,7 @@ static Ref_t create_detector(Detector &description, xml_h e, SensitiveDetector /
          if(-1.*x_backplane+delta_x-x_tube < tubeDiameter+tubeRadius) break;
       } // end x loop
  
-      // Condition for stopping C capillary placement along y.
+      // Condition for stopping S capillary placement along y.
       // y_backplane is equal up and down so I can keep the same for exiting loop
       if((-1.*y_backplane)-y_tube < (2.*y_pitch+tubeRadius)) break;
     } // End y loop and tube placement
