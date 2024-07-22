@@ -22,6 +22,7 @@ using namespace dd4hep::rec; // for dd4hep::rec::Vector3D
 #include "DREndcapTube.hh"
 
 #define COUNTTUBES // if defined it counts the tubes in each tower
+//#define DUMPTOWEREDGES // if defined it prints tower edges x and y position (cm)
 
 // Create the endcap calorimeter
 //
@@ -203,6 +204,13 @@ static Ref_t create_detector(Detector &description, xml_h e, SensitiveDetector /
     Helper.SetThetaOfCenter2(thetaofcenter2);
     Helper.CalBasic(); // Perform internal calculations
     Helper.Getpt(pt);  // Update 8 Vectors defining the tower edges
+
+    #ifdef DUMPTOWEREDGES 
+    std::cout<<"Tower "<<i<<" edges (cm):"<<std::endl;
+    for(std::size_t edge=0; edge<8; edge++){
+      std::cout<<"x "<<pt[edge].x()<<" y "<<pt[edge].y()<<std::endl;
+    }
+    #endif
     
     // Create now the tower as a Trap
     //
