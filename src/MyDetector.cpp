@@ -257,8 +257,8 @@ static Ref_t create_detector(Detector &description, xml_h e, SensitiveDetector /
         std::cout<<"----> Tower "<<i<<" being constructed";
         #endif
         Transform3D tower_trnsform(rotX*rotY*rotZ, Position(c_new.x(),c_new.y(),c_new.z())); 
-        PlacedVolume towerPlaced = phiERLog.placeVolume(towerLog,i,tower_trnsform);
-        towerPlaced.addPhysVolID("tower",i);
+        PlacedVolume towerPlaced = phiERLog.placeVolume(towerLog,tower_trnsform);
+        towerPlaced.addPhysVolID("tower",i); //ID this volume with just "tower" id
     }
     // Or, to debug, place towers one next to each other in tank volume
     /*if(i<35) {
