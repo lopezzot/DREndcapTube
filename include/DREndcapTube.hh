@@ -14,7 +14,7 @@
 // however only 3 points will be used to define the plane.
 struct Plane{
   Vector3D P1,P2,P3,P4;
-  Plane(Vector3D P1, Vector3D P2, Vector3D P3, Vector3D P4) : P1(P1),P2(P2),P3(P3),P4(P4){};
+  Plane(Vector3D p1, Vector3D p2, Vector3D p3, Vector3D p4) : P1(p1),P2(p2),P3(p3),P4(p4){};
 };
 
 // This struct represents a line towards negatize Z
