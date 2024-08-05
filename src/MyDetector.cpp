@@ -263,7 +263,8 @@ static Ref_t create_detector(Detector &description, xml_h e, SensitiveDetector /
         #endif
         Transform3D tower_trnsform(rotX*rotY*rotZ, Position(c_new.x(),c_new.y(),c_new.z())); 
         PlacedVolume towerPlaced = phiERLog.placeVolume(towerLog,tower_trnsform);
-        towerPlaced.addPhysVolID("tower",i); //ID this volume with just "tower" id
+        // ID this volume with tower ID, for the moment I leave air ID to 0 (dummy)
+        towerPlaced.addPhysVolID("tower",i).addPhysVolID("air",0);
     }
     // Or, to debug, place towers one next to each other in tank volume
     /*if(i<35) {
