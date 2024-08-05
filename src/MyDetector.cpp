@@ -133,14 +133,16 @@ static Ref_t create_detector(Detector &description, xml_h e, SensitiveDetector /
     RotationX rotx(M_PI);
     RotationY roty(M_PI);
     Transform3D slice_trnsform(rotz1*rotz2*rotx*roty, Position(0,0,(innerR)*tan(thetaB)+length/2.)); 
-    PlacedVolume phiERPlaced = tank_vol.placeVolume(phiERLog,j+1,slice_trnsform); //copynumber avoids 0
-    phiERPlaced.addPhysVolID("phiERPlace",j+1); // copynumber avoids 0
+    PlacedVolume phiERPlaced = tank_vol.placeVolume(phiERLog,slice_trnsform);
+    // ID this volume with two numbers: endcap 0 (right endcap) 1 (left endcap)
+    // and stave rotation number (avoids 0)
+    phiERPlaced.addPhysVolID("endcap",0).addPhysVolID("stave",j+1);
 
     // Placement of left endcap (negative z-coordinate)
     RotationY rotyleft(0.);
     Transform3D slice_trnsformleft(rotz1*rotz2*rotx*rotyleft, Position(0,0,-1.*((innerR)*tan(thetaB)+length/2.))); 
-    PlacedVolume phiELPlaced = tank_vol.placeVolume(phiERLog,-j-1,slice_trnsformleft); // copynumber avoids 0
-    phiELPlaced.addPhysVolID("phiELPlace",-j); // copynumber avoids 0
+    PlacedVolume phiELPlaced = tank_vol.placeVolume(phiERLog,slice_trnsformleft);
+    phiELPlaced.addPhysVolID("endcap",1).addPhysVolID("stave",j+1);
   } // end of slice/stave placement
 
   // Create an S tube with full tower length
@@ -150,11 +152,14 @@ static Ref_t create_detector(Detector &description, xml_h e, SensitiveDetector /
   Tube clad_S(0.*mm, cladRadius, tower_height/2., 2*M_PI); // cladding S
   Volume clad_SLog("clad_SLog",clad_S,description.material(x_clad_S.attr<std::string>(_U(material))));
   clad_SLog.setVisAttributes(description, x_clad_S.visStr());
-  /*PlacedVolume clad_SPlaced =*/ capillary_SLog.placeVolume(clad_SLog, 0, Position(0.,0.,0.));
+  PlacedVolume clad_SPlaced = capillary_SLog.placeVolume(clad_SLog,Position(0.,0.,0.));
+  // ID this volume with clad (0/1) core (0/1) and cherekov (0/1) ids
+  clad_SPlaced.addPhysVolID("clad",1).addPhysVolID("core",0).addPhysVolID("cherenkov",0);
   Tube core_S(0.*mm, coreRadius, tower_height/2., 2*M_PI); // core S
   Volume core_SLog("core_SLog",core_S,description.material(x_core_S.attr<std::string>(_U(material))));
   core_SLog.setVisAttributes(description, x_core_S.visStr());
-  /*PlacedVolume core_SPlaced =*/ clad_SLog.placeVolume(core_SLog);
+  PlacedVolume core_SPlaced = clad_SLog.placeVolume(core_SLog);
+  core_SPlaced.addPhysVolID("clad",0).addPhysVolID("core",1).addPhysVolID("cherenkov",0);
 
   // Create a C tube with full tower length
   Tube capillary_C(0.*mm, tubeRadius, tower_height/2., 2*M_PI);
@@ -163,11 +168,13 @@ static Ref_t create_detector(Detector &description, xml_h e, SensitiveDetector /
   Tube clad_C(0.*mm, cladRadius, tower_height/2., 2*M_PI); // cladding C
   Volume clad_CLog("clad_CLog",clad_C,description.material(x_clad_C.attr<std::string>(_U(material))));
   clad_CLog.setVisAttributes(description, x_clad_C.visStr());
-  /*PlacedVolume clad_CPlaced =*/ capillary_CLog.placeVolume(clad_CLog, 0, Position(0.,0.,0.));
+  PlacedVolume clad_CPlaced = capillary_CLog.placeVolume(clad_CLog,Position(0.,0.,0.));
+  clad_CPlaced.addPhysVolID("clad",1).addPhysVolID("core",0).addPhysVolID("cherenkov",1);
   Tube core_C(0.*mm, coreRadius, tower_height/2., 2*M_PI); // core C
   Volume core_CLog("core_CLog",core_C,description.material(x_core_C.attr<std::string>(_U(material))));
   core_CLog.setVisAttributes(description, x_core_C.visStr());
-  /*PlacedVolume core_CPlaced =*/ clad_CLog.placeVolume(core_CLog);
+  PlacedVolume core_CPlaced = clad_CLog.placeVolume(core_CLog);
+  core_CPlaced.addPhysVolID("clad",0).addPhysVolID("core",1).addPhysVolID("cherenkov",1);
 
   // Build the towers inside and endcap R slice
   //
@@ -255,8 +262,9 @@ static Ref_t create_detector(Detector &description, xml_h e, SensitiveDetector /
         std::cout<<"----> Tower "<<i<<" being constructed";
         #endif
         Transform3D tower_trnsform(rotX*rotY*rotZ, Position(c_new.x(),c_new.y(),c_new.z())); 
-        PlacedVolume towerPlaced = phiERLog.placeVolume(towerLog,i,tower_trnsform);
-        towerPlaced.addPhysVolID("tower",i);
+        PlacedVolume towerPlaced = phiERLog.placeVolume(towerLog,tower_trnsform);
+        // ID this volume with tower ID, for the moment I leave air ID to 0 (dummy)
+        towerPlaced.addPhysVolID("tower",i).addPhysVolID("air",0);
     }
     // Or, to debug, place towers one next to each other in tank volume
     /*if(i<35) {
@@ -299,8 +307,9 @@ static Ref_t create_detector(Detector &description, xml_h e, SensitiveDetector /
          Vector3D capillaryPos(x_tube, y_tube, length/2.);             // locate tube on tower back face
          auto capillaryLength = Helper.GetTubeLength(pt,capillaryPos); // calculate tube length
          if(std::fabs(capillaryLength-length) < 0.0001*mm){
-           PlacedVolume capillaryPlaced = towerLog.placeVolume(capillary_SLog, 1000*k+j, Position(x_tube, y_tube, 0.));
-           capillaryPlaced.addPhysVolID("capillary_S", 1000*k+j);
+           PlacedVolume capillaryPlaced = towerLog.placeVolume(capillary_SLog, Position(x_tube, y_tube, 0.));
+           // ID this volume with row ID and column ID
+           capillaryPlaced.addPhysVolID("row",k).addPhysVolID("col",j);
            #ifdef COUNTTUBES
            tubeNo++;
            totalTubeLength += tower_height;
@@ -319,14 +328,17 @@ static Ref_t create_detector(Detector &description, xml_h e, SensitiveDetector /
            Tube cladShort_S(0.*mm, cladRadius, (capillaryLength-TubeLengthOffset)/2., 2*M_PI); // cladding S
            Volume cladShort_SLog("cladShort_SLog",cladShort_S,description.material(x_clad_S.attr<std::string>(_U(material))));
            cladShort_SLog.setVisAttributes(description, x_clad_S.visStr());
-           /*PlacedVolume cladShort_SPlaced =*/ capillaryShortLog.placeVolume(cladShort_SLog, 0, Position(0.,0.,0.));
+           PlacedVolume cladShort_SPlaced = capillaryShortLog.placeVolume(cladShort_SLog,Position(0.,0.,0.));
+           cladShort_SPlaced.addPhysVolID("clad",1).addPhysVolID("core",0).addPhysVolID("cherenkov",0);
            Tube coreShort_S(0.*mm, coreRadius, (capillaryLength-TubeLengthOffset)/2., 2*M_PI); // core S
            Volume coreShort_SLog("coreShort_SLog",coreShort_S,description.material(x_core_S.attr<std::string>(_U(material))));
            coreShort_SLog.setVisAttributes(description, x_core_S.visStr());
-           /*PlacedVolume coreShort_SPlaced =*/ cladShort_SLog.placeVolume(coreShort_SLog);
+           PlacedVolume coreShort_SPlaced = cladShort_SLog.placeVolume(coreShort_SLog);
+           coreShort_SPlaced.addPhysVolID("clad",0).addPhysVolID("core",1).addPhysVolID("cherenkov",1);
 
-           PlacedVolume capillaryShortPlaced = towerLog.placeVolume(capillaryShortLog, 1000*k+j, Position(x_tube, y_tube, length/2.-capillaryLength/2.+TubeLengthOffset/2.));
-           capillaryShortPlaced.addPhysVolID("capillary_S", 1000*k+j);
+           PlacedVolume capillaryShortPlaced = towerLog.placeVolume(capillaryShortLog, Position(x_tube, y_tube, length/2.-capillaryLength/2.+TubeLengthOffset/2.));
+           // ID this volume with row ID and column ID
+           capillaryShortPlaced.addPhysVolID("row",k).addPhysVolID("col",j);
            #ifdef COUNTTUBES
            tubeNo++;
            totalTubeLength += capillaryLength; // neglecting the offset
@@ -352,8 +364,8 @@ static Ref_t create_detector(Detector &description, xml_h e, SensitiveDetector /
            Vector3D capillaryPos_C(x_tube_C, y_tube_C, length/2.);
            auto capillaryLength_C = Helper.GetTubeLength(pt,capillaryPos_C);
            if(std::fabs(capillaryLength_C-length) < 0.0001*mm){
-             PlacedVolume capillaryPlaced_C = towerLog.placeVolume(capillary_CLog, 100000*k+j, Position(x_tube_C, y_tube_C, 0.));
-             capillaryPlaced_C.addPhysVolID("capillary_C", 100000*k+j);
+             PlacedVolume capillaryPlaced_C = towerLog.placeVolume(capillary_CLog, Position(x_tube_C, y_tube_C, 0.));
+             capillaryPlaced_C.addPhysVolID("row",k).addPhysVolID("col",j);
              #ifdef COUNTTUBES
              tubeNo++;
              totalTubeLength += tower_height;
@@ -368,14 +380,16 @@ static Ref_t create_detector(Detector &description, xml_h e, SensitiveDetector /
                Tube cladShort_C(0.*mm, cladRadius, (capillaryLength_C-TubeLengthOffset)/2., 2*M_PI); // cladding C
                Volume cladShort_CLog("cladShort_CLog",cladShort_C,description.material(x_clad_C.attr<std::string>(_U(material))));
                cladShort_CLog.setVisAttributes(description, x_clad_C.visStr());
-               /*PlacedVolume cladShort_CPlaced =*/ capillaryShortLog_C.placeVolume(cladShort_CLog, 0, Position(0.,0.,0.));
+               PlacedVolume cladShort_CPlaced = capillaryShortLog_C.placeVolume(cladShort_CLog,Position(0.,0.,0.));
+               cladShort_CPlaced.addPhysVolID("clad",1).addPhysVolID("core",0).addPhysVolID("cherenkov",1);
                Tube coreShort_C(0.*mm, coreRadius, (capillaryLength_C-TubeLengthOffset)/2., 2*M_PI); // core C
                Volume coreShort_CLog("coreShort_CLog",coreShort_C,description.material(x_core_C.attr<std::string>(_U(material))));
                coreShort_CLog.setVisAttributes(description, x_core_C.visStr());
-               /*PlacedVolume coreShort_CPlaced =*/ cladShort_CLog.placeVolume(coreShort_CLog);
+               PlacedVolume coreShort_CPlaced = cladShort_CLog.placeVolume(coreShort_CLog);
+               coreShort_CPlaced.addPhysVolID("clad",0).addPhysVolID("core",1).addPhysVolID("cherenkov",1);
 
-               PlacedVolume capillaryShortPlaced_C = towerLog.placeVolume(capillaryShortLog_C, 100000*k+j, Position(x_tube_C, y_tube_C, length/2.-capillaryLength_C/2.+TubeLengthOffset/2.));
-               capillaryShortPlaced_C.addPhysVolID("capillary_C", 100000*k+j);
+               PlacedVolume capillaryShortPlaced_C = towerLog.placeVolume(capillaryShortLog_C,Position(x_tube_C, y_tube_C, length/2.-capillaryLength_C/2.+TubeLengthOffset/2.));
+               capillaryShortPlaced_C.addPhysVolID("row",k).addPhysVolID("col",j);
                #ifdef COUNTTUBES
                tubeNo++;
                totalTubeLength += capillaryLength_C; // neglecting the offset

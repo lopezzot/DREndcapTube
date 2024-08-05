@@ -297,4 +297,14 @@
     </detector>
   </detectors>
 
+  <readouts>
+    <readout name="MyReadout">
+      <segmentation type="CartesianGridXY" 
+             grid_size_x="1*mm" 
+             grid_size_y="1*mm"/>
+      <!-- NO SPACES BETWEEN ID DESCRIPTORS!!! -->
+      <id>endcap:1,stave:10,tower:8,air:1,col:10,row:7,clad:1,core:1,cherenkov:1</id>
+    </readout>
+  </readouts> 
+
 </lccdd>

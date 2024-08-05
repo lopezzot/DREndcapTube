@@ -36,7 +36,13 @@ endif()
 
 #Add plugin code with geometry for MyDetector
 dd4hep_add_plugin(MyDetector SOURCES src/*.cpp
-  USES DD4hep::DDCore DD4hep::DDRec ROOT::Core ROOT::Geom ROOT::GenVector ${OPT_XERCESC}
+    USES DD4hep::DDCore
+         DD4hep::DDRec
+         DD4hep::DDCond
+         ROOT::Core
+         ROOT::Geom
+         ROOT::GenVector
+         ${OPT_XERCESC}
   )
 
 # Specify the include directory for the MyDetector target
