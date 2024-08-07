@@ -1,25 +1,33 @@
-# -------------------------------------------------------------------------
-# File: CMakeLists.txt
-#
-# Purpose: CMake file to compile the example MyDetector
-#
-# Author: Lorenzo Pezzotti, wildly using dd4hep examples
-#
-# Created: 2/5/2024
-# -------------------------------------------------------------------------
+cmake_minimum_required(VERSION 3.8 FATAL_ERROR)
+cmake_policy(SET CMP0074 NEW)
+set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+project(DREndcapTubes)
 
-#==========================================================================
-#  AIDA Detector description implementation 
-#--------------------------------------------------------------------------
-# Copyright (C) Organisation europeenne pour la Recherche nucleaire (CERN)
-# All rights reserved.
-#
-# For the licensing terms see $DD4hepINSTALL/LICENSE.
-# For the list of contributors see $DD4hepINSTALL/doc/CREDITS.
-#
-#==========================================================================
+set(CMAKE_MODULE_PATH
+    ${CMAKE_MODULE_PATH}
+    ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
 
-cmake_minimum_required(VERSION 3.14 FATAL_ERROR)
+# Use GNU-style hierarchy for installing build products
+include(GNUInstallDirs)
+
+find_package(ROOT REQUIRED)
+find_package(Gaudi REQUIRED)
+find_package(EDM4HEP)
+find_package(k4FWCore REQUIRED)
+find_package(sipm REQUIRED)
+
+#----------------------------------------------------------------------------
+# Find Geant4 package, activating all available UI and Vis drivers by default
+# You can set WITH_GEANT4_UIVIS to OFF via the command line or ccmake/cmake-gui
+# to build a batch mode only executable
+#
+option(WITH_GEANT4_UIVIS "Build example with Geant4 UI and Vis drivers" OFF)
+if(WITH_GEANT4_UIVIS)
+  find_package(Geant4 REQUIRED ui_all vis_all)
+else()
+  find_package(Geant4 REQUIRED)
+endif()
 
 IF(NOT TARGET DD4hep::DDCore)
   find_package ( DD4hep REQUIRED )
@@ -28,28 +36,16 @@ IF(NOT TARGET DD4hep::DDCore)
   dd4hep_configure_output()
 ENDIF()
 
+find_package(podio REQUIRED HINTS $ENV{PODIO})
+
 dd4hep_set_compiler_flags()
-#==========================================================================
-if(TARGET XercesC::XercesC)
-  SET(OPT_XERCESC XercesC::XercesC)
-endif()
+dd4hep_configure_output()
 
-#Add plugin code with geometry for MyDetector
-dd4hep_add_plugin(MyDetector SOURCES src/*.cpp
-    USES DD4hep::DDCore
-         DD4hep::DDRec
-         DD4hep::DDCond
-         ROOT::Core
-         ROOT::Geom
-         ROOT::GenVector
-         ${OPT_XERCESC}
-  )
+set(BOOST_ROOT "$ENV{BOOST_ROOT}")
 
-# Specify the include directory for the MyDetector target
-target_include_directories(MyDetector PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include)
-
-#Use this only if you do not want to use example from build directory
-#install(TARGETS MyDetector LIBRARY DESTINATION lib)
-#install(DIRECTORY compact DESTINATION examples/ClientTests)
-#-----------------------------------------------------------------------------------
-dd4hep_configure_scripts(MyDetector DEFAULT_SETUP WITH_TESTS)
+add_subdirectory(DRdetector)
+#add_subdirectory(DRutils)
+# add_subdirectory(DRsim)
+# add_subdirectory(DRdigi)
+# add_subdirectory(DRreco)
+# add_subdirectory(analysis)
