@@ -19,7 +19,7 @@ using namespace dd4hep;
 using namespace dd4hep::rec; // for dd4hep::rec::Vector3D
 
 // Includers from project files
-#include "DREndcapTube.hh"
+#include "DREndcapTubes.hh"
 
 #define COUNTTUBES // if defined it counts the tubes in each tower
 //#define DUMPTOWEREDGES // if defined it prints tower edges x and y position (cm)
@@ -438,6 +438,6 @@ static Ref_t create_detector(Detector &description, xml_h e, SensitiveDetector /
   return sdet;
 }
 
-DECLARE_DETELEMENT(DD4hep_MyDetector,create_detector)
+DECLARE_DETELEMENT(DREndcapTubes,create_detector)
 
 //**************************************************************************

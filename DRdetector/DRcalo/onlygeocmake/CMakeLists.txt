@@ -35,7 +35,7 @@ if(TARGET XercesC::XercesC)
 endif()
 
 #Add plugin code with geometry for MyDetector
-dd4hep_add_plugin(MyDetector SOURCES ../src/*.cpp
+dd4hep_add_plugin(DREndcapTubes SOURCES ../src/*.cpp
     USES DD4hep::DDCore
          DD4hep::DDRec
          DD4hep::DDCond
@@ -46,10 +46,10 @@ dd4hep_add_plugin(MyDetector SOURCES ../src/*.cpp
   )
 
 # Specify the include directory for the MyDetector target
-target_include_directories(MyDetector PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/../include)
+target_include_directories(DREndcapTubes PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/../include)
 
 #Use this only if you do not want to use example from build directory
 #install(TARGETS MyDetector LIBRARY DESTINATION lib)
 #install(DIRECTORY compact DESTINATION examples/ClientTests)
 #-----------------------------------------------------------------------------------
-dd4hep_configure_scripts(MyDetector DEFAULT_SETUP WITH_TESTS)
+dd4hep_configure_scripts(DREndcapTubes DEFAULT_SETUP WITH_TESTS)
