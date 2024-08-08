@@ -29,7 +29,7 @@
   </info>
 
   <define>
-    <constant name="world_side"  value="6*m"/>
+    <constant name="world_side"  value="22*m"/>
     <constant name="world_x"     value="world_side/2"/>
     <constant name="world_y"     value="world_side/2"/>
     <constant name="world_z"     value="world_side/2"/>
