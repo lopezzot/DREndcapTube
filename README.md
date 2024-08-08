@@ -53,7 +53,7 @@ materialScan ./DRdetector/DRcalo/compact/DREndcapTubes.xml 0 0 0 10 200 500
 ### Run simple simulations
 The following command can perform simple simulations with the particle gun.
 ```sh
-ddsim --compactFile DRdetector/DRcalo/compact/DREndcapTubes.xml --enableGun --gun.particle geantino --gun.energy 1000*MeV --gun.direction "0 0 -1" --gun.position "0 200 0*cm" --outputFile out_edm4hep.root -N 100 --part.userParticleHandler=""
+ddsim --compactFile DRdetector/DRcalo/compact/DREndcapTubes.xml --enableGun --gun.particle geantino --gun.energy 1000*MeV --gun.direction "0 0 -1" --gun.position "0 200*cm 0" --outputFile out_edm4hep.root -N 100 --part.userParticleHandler=""
 ```
 
 ### Alternative approach to build, compile and visualize geometry using a local DD4hep installation
