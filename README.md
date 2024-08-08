@@ -37,10 +37,17 @@ browse the root file
 ```sh
 rootbrowse DREndcapTubes.root
 ```
+
 ### Check geometry overlaps
 The following command converts the geometry to geant4 and checks for overlaps
 ```sh
 ddsim --compactFile DRdetector/DRcalo/compact/DREndcapTubes.xml --runType run --macroFile scripts/overlap.mac --part.userParticleHandler=''
+```
+
+### Scan material along a line
+The following command performs a material scan along a line from (0,0,0) to (10,200,500), unit must be cm.
+```sh
+materialScan ./DRdetector/DRcalo/compact/DREndcapTubes.xml 0 0 0 10 200 500
 ```
 
 ### Alternative approach to build, compile and visualize geometry using a local DD4hep installation
