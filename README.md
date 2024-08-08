@@ -28,6 +28,16 @@ or
 geoWebDisplay DRdetector/DRcalo/compact/DREndcapTubes.xml
 ```
 
+### Convert geometry to root and browse it
+Convert the geometry to root
+```sh
+./scripts/dd4hep2root -c DRdetector/DRcalo/compact/DREndcapTubes.xml -o DREndcapTubes.root
+```
+browse the root file
+```sh
+rootbrowse DREndcapTubes.root
+```
+
 ### Alternative approach to build, compile and visualize geometry using a local DD4hep installation
 I experienced crashes while visualizing the geometry over ssh connection to lxplus-alma9 machines.
 The following are instructions on how to visualize the geometry using a local DD4hep installation.
