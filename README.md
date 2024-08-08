@@ -50,6 +50,12 @@ The following command performs a material scan along a line from (0,0,0) to (10,
 materialScan ./DRdetector/DRcalo/compact/DREndcapTubes.xml 0 0 0 10 200 500
 ```
 
+### Run simple simulations
+The following command can perform simple simulations with the particle gun.
+```sh
+ddsim --compactFile DRdetector/DRcalo/compact/DREndcapTubes.xml --enableGun --gun.particle geantino --gun.energy 1000*MeV --gun.direction "0 0 -1" --gun.position "0 200 0*cm" --outputFile out_edm4hep.root -N 100 --part.userParticleHandler=""
+```
+
 ### Alternative approach to build, compile and visualize geometry using a local DD4hep installation
 I experienced crashes while visualizing the geometry over ssh connection to lxplus-alma9 machines.
 The following are instructions on how to visualize the geometry using a local DD4hep installation.
