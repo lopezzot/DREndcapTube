@@ -37,6 +37,11 @@ browse the root file
 ```sh
 rootbrowse DREndcapTubes.root
 ```
+### Check geometry overlaps
+The following command converts the geometry to geant4 and checks for overlaps
+```sh
+ddsim --compactFile DRdetector/DRcalo/compact/DREndcapTubes.xml --runType run --macroFile scripts/overlap.mac --part.userParticleHandler=''
+```
 
 ### Alternative approach to build, compile and visualize geometry using a local DD4hep installation
 I experienced crashes while visualizing the geometry over ssh connection to lxplus-alma9 machines.
