@@ -28,21 +28,21 @@ using namespace dd4hep::rec; // for dd4hep::rec::Vector3D
 //
 static Ref_t create_detector(Detector &description, xml_h e, SensitiveDetector /* sens */)  {
 
-  std::cout<<"--> DREndcapTube::create_detector() start"<<std::endl;
+  std::cout<<"--> DREndcapTubes::create_detector() start"<<std::endl;
 
   // Get info from the xml file
   // 
   // Info for the main detector element DREndcapTube
   xml_det_t   x_det    = e;
   std::string det_name = x_det.nameStr(); // DREndcapTube volume
-  std::cout<<"--> Going to create "<<det_name<<", with ID: "<<x_det.id()<<std::endl;
+  std::cout<<"--> DREndcapTubes: going to create "<<det_name<<", with ID: "<<x_det.id()<<std::endl;
   xml_dim_t x_dim = x_det.dimensions();
   const double innerR = x_dim.inner_radius();   // inner radius at theta = 0. rad
   const double tower_height = x_dim.z_length(); // tower height/length
   const double length = tower_height;           // alias for tower height/length
   const int NbOfZRot = static_cast<int>(x_dim.deltaphi()); // number or rations aroung Z axis
   const double phi_unit = 2*M_PI/(double)NbOfZRot; // slice delta phi
-  std::cout<<"--> From XML description: innerR "<<innerR/m<<" m, tower length "<<tower_height/m<<
+  std::cout<<"--> DREndcapTubes: from XML description: innerR "<<innerR/m<<" m, tower length "<<tower_height/m<<
       " m, z-rotations "<<NbOfZRot;
   // Info for subdetectors
   xml_det_t   x_tank   = x_det.child(_Unicode(tank));
@@ -213,7 +213,7 @@ static Ref_t create_detector(Detector &description, xml_h e, SensitiveDetector /
     Helper.Getpt(pt);  // Update 8 Vectors defining the tower edges
 
     #ifdef DUMPTOWEREDGES 
-    std::cout<<"Tower "<<i<<" edges (cm):"<<std::endl;
+    std::cout<<"DREndcapTubes: Tower "<<i<<" edges (cm):"<<std::endl;
     for(std::size_t edge=0; edge<8; edge++){
       std::cout<<"x "<<pt[edge].x()<<" y "<<pt[edge].y()<<std::endl;
     }
@@ -256,10 +256,10 @@ static Ref_t create_detector(Detector &description, xml_h e, SensitiveDetector /
     Vector3D c_new(-c.y(),c.z(),c.x()-(innerR+0.5*length));
     if(i<NbOfEndcapReduced) { // Place towers up to 35, this "if" is just a protection in case the loop range is changed
         #ifndef COUNTTUBES
-        std::cout<<"----> Tower "<<i<<" being constructed"<<std::endl;
+        std::cout<<"----> DREndcapTubes: tower "<<i<<" being constructed"<<std::endl;
         #endif
         #ifdef COUNTTUBES
-        std::cout<<"----> Tower "<<i<<" being constructed";
+        std::cout<<"----> DREndcapTubes: tower "<<i<<" being constructed";
         #endif
         Transform3D tower_trnsform(rotX*rotY*rotZ, Position(c_new.x(),c_new.y(),c_new.z())); 
         PlacedVolume towerPlaced = phiERLog.placeVolume(towerLog,tower_trnsform);
@@ -417,8 +417,8 @@ static Ref_t create_detector(Detector &description, xml_h e, SensitiveDetector /
   } //End of towers creation and placement
 
   #ifdef COUNTTUBES
-  std::cout<<"--> Number of tubes per stave/phi-slice "<<totalTubeNo<<std::endl;
-  std::cout<<"--> Number of tubes for both endcaps "<<totalTubeNo*NbOfZRot*2<<" and total length "<<(NbOfZRot*2*totalTubeLength)/km<<" km"<<std::endl;
+  std::cout<<"--> DREndcapTubes: number of tubes per stave/phi-slice "<<totalTubeNo<<std::endl;
+  std::cout<<"--> DREndcapTubes: number of tubes for both endcaps "<<totalTubeNo*NbOfZRot*2<<" and total length "<<(NbOfZRot*2*totalTubeLength)/km<<" km"<<std::endl;
   #endif
 
   // Create a (DetElement) corresponding to MyDetector.
@@ -433,7 +433,7 @@ static Ref_t create_detector(Detector &description, xml_h e, SensitiveDetector /
   tankPlace.addPhysVolID("tank",x_det.id());
   sdet.setPlacement(tankPlace);
 
-  std::cout<<"--> DREndcapTube::create_detector() end"<<std::endl;
+  std::cout<<"--> DREndcapTubes::create_detector() end"<<std::endl;
 
   return sdet;
 }
