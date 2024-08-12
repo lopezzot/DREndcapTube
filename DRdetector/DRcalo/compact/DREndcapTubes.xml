@@ -280,7 +280,8 @@
        If a detector contains sub-detectors, their information must be included as below.
   -->
   <detectors>
-    <detector name="DREndcapTubes" type="DREndcapTubes" vis="TankVis" id ="0" sensitive="false">
+    <detector name="DREndcapTubes" type="DREndcapTubes" vis="TankVis" id ="0" readout="MyReadout">
+    <type_flags type=" DetType_CALORIMETER + DetType_ELECTROMAGNETIC + DetType_BARREL"/>
     <dimensions 
       inner_radius="innerRadius"
       z_length="towerHeight"
@@ -292,7 +293,7 @@
       <tube_C material="Brass" outer_radius="TubeRadius" vis="tube_C_Vis"/>
       <clad_S material="PMMA" outer_radius="CladRadius" vis="clad_S_Vis"/>
       <clad_C material="Fluorinated_Polymer" outer_radius="CladRadius" vis="clad_C_Vis"/>
-      <core_S material="DR_Polystyrene" outer_radius="CoreRadius" vis="core_S_Vis"/>
+      <core_S material="DR_Polystyrene" outer_radius="CoreRadius" sensitive="true" vis="core_S_Vis"/>
       <core_C material="PMMA" outer_radius="CoreRadius" vis="core_C_Vis"/>
     </detector>
   </detectors>
@@ -303,7 +304,7 @@
              grid_size_x="1*mm" 
              grid_size_y="1*mm"/>
       <!-- NO SPACES BETWEEN ID DESCRIPTORS!!! -->
-      <id>endcap:1,stave:10,tower:8,air:1,col:10,row:7,clad:1,core:1,cherenkov:1</id>
+      <id>tank:1,endcap:1,stave:10,tower:8,air:1,col:10,row:7,clad:1,core:1,cherenkov:1</id>
     </readout>
   </readouts> 
 
