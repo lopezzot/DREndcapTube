@@ -19,7 +19,7 @@
      #
      #==========================================================================
 -->
-  <info name="DREndcapTube"
+  <info name="DREndcapTubes"
     title="IDEA dual-readout endcap calorimeter with capillary tubes"
     author="Lorenzo Pezzotti"
     url="None"
@@ -29,7 +29,7 @@
   </info>
 
   <define>
-    <constant name="world_side"  value="6*m"/>
+    <constant name="world_side"  value="22*m"/>
     <constant name="world_x"     value="world_side/2"/>
     <constant name="world_y"     value="world_side/2"/>
     <constant name="world_z"     value="world_side/2"/>
@@ -280,7 +280,7 @@
        If a detector contains sub-detectors, their information must be included as below.
   -->
   <detectors>
-    <detector name="DREndcapTube" type="DD4hep_MyDetector" vis="TankVis" id ="0" sensitive="false">
+    <detector name="DREndcapTubes" type="DREndcapTubes" vis="TankVis" id ="0" sensitive="false">
     <dimensions 
       inner_radius="innerRadius"
       z_length="towerHeight"
