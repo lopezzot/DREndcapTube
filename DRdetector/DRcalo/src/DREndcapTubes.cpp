@@ -33,7 +33,7 @@ static Ref_t create_detector(Detector &description, xml_h e, SensitiveDetector s
   // Get info from the xml file
   // 
   // Info for the main detector element DREndcapTube
-  //sens.setType("calorimeter");
+  sens.setType("calorimeter");
   xml_det_t   x_det    = e;
   std::string det_name = x_det.nameStr(); // DREndcapTube volume
   std::cout<<"--> DREndcapTubes: going to create "<<det_name<<", with ID: "<<x_det.id()<<std::endl;
