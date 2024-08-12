@@ -56,6 +56,7 @@ static Ref_t create_detector(Detector &description, xml_h e, SensitiveDetector s
   xml_det_t   x_core_S = x_det.child(_Unicode(core_S));
   auto x_core_S_sens = x_core_S.isSensitive();
   xml_det_t   x_core_C = x_det.child(_Unicode(core_C));
+  auto x_core_C_sens = x_core_C.isSensitive();
   const double tubeRadius = x_capillary_S.outer_radius();
   std::cout<<", tube radius "<<tubeRadius/mm<<" mm"<<std::endl;
   const double cladRadius = x_clad_S.outer_radius();
@@ -176,6 +177,7 @@ static Ref_t create_detector(Detector &description, xml_h e, SensitiveDetector s
   Tube core_C(0.*mm, coreRadius, tower_height/2., 2*M_PI); // core C
   Volume core_CLog("core_CLog",core_C,description.material(x_core_C.attr<std::string>(_U(material))));
   core_CLog.setVisAttributes(description, x_core_C.visStr());
+  if (x_core_C_sens) core_CLog.setSensitiveDetector(sens);
   PlacedVolume core_CPlaced = clad_CLog.placeVolume(core_CLog);
   core_CPlaced.addPhysVolID("clad",0).addPhysVolID("core",1).addPhysVolID("cherenkov",1);
 
@@ -338,7 +340,7 @@ static Ref_t create_detector(Detector &description, xml_h e, SensitiveDetector s
            coreShort_SLog.setVisAttributes(description, x_core_S.visStr());
            if (x_core_S_sens) coreShort_SLog.setSensitiveDetector(sens);
            PlacedVolume coreShort_SPlaced = cladShort_SLog.placeVolume(coreShort_SLog);
-           coreShort_SPlaced.addPhysVolID("clad",0).addPhysVolID("core",1).addPhysVolID("cherenkov",1);
+           coreShort_SPlaced.addPhysVolID("clad",0).addPhysVolID("core",1).addPhysVolID("cherenkov",0);
 
            PlacedVolume capillaryShortPlaced = towerLog.placeVolume(capillaryShortLog, Position(x_tube, y_tube, length/2.-capillaryLength/2.+TubeLengthOffset/2.));
            // ID this volume with row ID and column ID
@@ -389,6 +391,7 @@ static Ref_t create_detector(Detector &description, xml_h e, SensitiveDetector s
                Tube coreShort_C(0.*mm, coreRadius, (capillaryLength_C-TubeLengthOffset)/2., 2*M_PI); // core C
                Volume coreShort_CLog("coreShort_CLog",coreShort_C,description.material(x_core_C.attr<std::string>(_U(material))));
                coreShort_CLog.setVisAttributes(description, x_core_C.visStr());
+               if (x_core_C_sens) coreShort_CLog.setSensitiveDetector(sens);
                PlacedVolume coreShort_CPlaced = cladShort_CLog.placeVolume(coreShort_CLog);
                coreShort_CPlaced.addPhysVolID("clad",0).addPhysVolID("core",1).addPhysVolID("cherenkov",1);
 
