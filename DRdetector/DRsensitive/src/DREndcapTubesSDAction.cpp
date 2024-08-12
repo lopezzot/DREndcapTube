@@ -11,6 +11,8 @@
 #include <DDG4/Geant4ParticleInformation.h>
 #include <DDG4/Factories.h>
 
+#define DREndcapTubesSDDebug
+
 class DREndcapTubesSD {
     public:
       double eDep = 0.;
@@ -28,8 +30,22 @@ namespace dd4hep {
 
     // Function template specialization of Geant4SensitiveAction class.
     // Method that accesses the G4Step object at each track step.
-    template <> bool Geant4SensitiveAction<DREndcapTubesSD>::process(const G4Step* step, G4TouchableHistory* /*hist*/ ) {
-      std::cout<<step->GetTotalEnergyDeposit()<<std::endl;
+    template <> bool Geant4SensitiveAction<DREndcapTubesSD>::process(const G4Step* aStep, G4TouchableHistory* /*hist*/ ) {
+    
+      #ifdef DREndcapTubesSDDebug
+      //Print out some info step-by-step in sensitive volumes
+      //
+      std::cout<<"Track #: "<< aStep->GetTrack()->GetTrackID()<< " " <<
+                 "Step #: " << aStep->GetTrack()->GetCurrentStepNumber()<< " "<<
+                 "Volume: " << aStep->GetPreStepPoint()->GetTouchableHandle()->GetVolume()->GetName()<< " " << std::endl;
+      std::cout<<"x: "<< aStep->GetPreStepPoint()->GetPosition().x() <<
+                 "y: "<< aStep->GetPreStepPoint()->GetPosition().y() <<
+                 "z: "<< aStep->GetPreStepPoint()->GetPosition().z() << std::endl;
+      std::cout<<"Particle "<< aStep->GetTrack()->GetParticleDefinition()->GetParticleName()<< " " <<
+                 "Dep(MeV) "<< aStep->GetTotalEnergyDeposit() << " " <<
+                 "Mat "     << aStep->GetPreStepPoint()->GetMaterial()->GetName() << " " << 
+                 "Vol "     << aStep->GetPreStepPoint()->GetTouchableHandle()->GetVolume()->GetName() << std::endl; 
+      #endif
       /*Geant4StepHandler h(step);
       Position  prePos    = h.prePos();
       Position  postPos   = h.postPos();
