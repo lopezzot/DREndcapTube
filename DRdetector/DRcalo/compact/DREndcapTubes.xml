@@ -289,12 +289,12 @@
       <tank   x="10*m"    y="10*m"    z="10*m"    material="Air"  vis="TankVis"/>
       <stave material="Air" vis="StaveVis"/>
       <tower material="Air" vis="TowerVis"/>
-      <tube_S material="Brass" outer_radius="TubeRadius" vis="tube_S_Vis"/>
-      <tube_C material="Brass" outer_radius="TubeRadius" vis="tube_C_Vis"/>
-      <clad_S material="PMMA" outer_radius="CladRadius" vis="clad_S_Vis"/>
-      <clad_C material="Fluorinated_Polymer" outer_radius="CladRadius" vis="clad_C_Vis"/>
+      <tube_S material="Brass" outer_radius="TubeRadius" sensitive="false" vis="tube_S_Vis"/>
+      <tube_C material="Brass" outer_radius="TubeRadius" sensitive="false" vis="tube_C_Vis"/>
+      <clad_S material="PMMA" outer_radius="CladRadius" sensitive="false" vis="clad_S_Vis"/>
+      <clad_C material="Fluorinated_Polymer" outer_radius="CladRadius" sensitive="false" vis="clad_C_Vis"/>
       <core_S material="DR_Polystyrene" outer_radius="CoreRadius" sensitive="true" vis="core_S_Vis"/>
-      <core_C material="PMMA" outer_radius="CoreRadius" vis="core_C_Vis"/>
+      <core_C material="PMMA" outer_radius="CoreRadius" sensitive="false" vis="core_C_Vis"/>
     </detector>
   </detectors>
 
