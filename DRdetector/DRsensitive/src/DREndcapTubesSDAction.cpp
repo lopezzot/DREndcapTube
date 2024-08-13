@@ -30,6 +30,7 @@
 // Includers from project files
 #include "DREndcapTubesRunAction.hh"
 #include "DREndcapTubesEvtAction.hh"
+#include "DREndcapTubesStepAction.hh"
 
 #define DREndcapTubesSDDebug
 
@@ -58,6 +59,7 @@ namespace dd4hep {
       void beginRun(const G4Run* run){
         fRunAction = new DREndcapTubesRunAction;
 	fEvtAction = new DREndcapTubesEvtAction;
+	fStepAction = new DREndcapTubesStepAction(fEvtAction);
         fRunAction->BeginOfRunAction(run);
       }
 
@@ -73,12 +75,17 @@ namespace dd4hep {
         fEvtAction->EndOfEventAction(event);
       }
 
+      void process(G4Step const * step, G4TouchableHistory* ) {
+        fStepAction->UserSteppingAction(step);
+      }
+
     // Fields
     //
     public:
       double eDep = 0.;
       DREndcapTubesRunAction* fRunAction;
       DREndcapTubesEvtAction* fEvtAction;
+      DREndcapTubesStepAction* fStepAction;
       Geant4Sensitive*  sensitive{};
     };
   } // namespace sim
@@ -108,7 +115,7 @@ namespace dd4hep {
 
     // Function template specialization of Geant4SensitiveAction class.
     // Method that accesses the G4Step object at each track step.
-    template <> bool Geant4SensitiveAction<DREndcapTubesSD>::process(const G4Step* aStep, G4TouchableHistory* /*hist*/ ) {
+    template <> bool Geant4SensitiveAction<DREndcapTubesSD>::process(const G4Step* aStep, G4TouchableHistory* history ) {
     
       #ifdef DREndcapTubesSDDebug
       //Print out some info step-by-step in sensitive volumes
@@ -124,6 +131,7 @@ namespace dd4hep {
                  "Mat "     << aStep->GetPreStepPoint()->GetMaterial()->GetName() << " " << 
                  "Vol "     << aStep->GetPreStepPoint()->GetTouchableHandle()->GetVolume()->GetName() << std::endl; 
       #endif
+      m_userData.process(aStep, history);
       /*Geant4StepHandler h(step);
       Position  prePos    = h.prePos();
       Position  postPos   = h.postPos();
