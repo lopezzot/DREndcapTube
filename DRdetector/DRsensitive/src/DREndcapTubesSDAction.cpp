@@ -51,11 +51,6 @@ namespace dd4hep {
         // nothing to clear
       }
 
-      // Method for generating hit(s)
-      G4bool process(G4Step* /*const step*/, G4TouchableHistory*) {
-        return true;
-      }
-
       void beginRun(const G4Run* run){
         fRunAction = new DREndcapTubesRunAction;
 	fEvtAction = new DREndcapTubesEvtAction;
@@ -130,7 +125,9 @@ namespace dd4hep {
                  "Dep(MeV) "<< aStep->GetTotalEnergyDeposit() << " " <<
                  "Mat "     << aStep->GetPreStepPoint()->GetMaterial()->GetName() << " " << 
                  "Vol "     << aStep->GetPreStepPoint()->GetTouchableHandle()->GetVolume()->GetName() << std::endl; 
-      #endif
+      #endif 
+
+      // Process this step information
       m_userData.process(aStep, history);
       /*Geant4StepHandler h(step);
       Position  prePos    = h.prePos();
