@@ -29,6 +29,7 @@
 
 // Includers from project files
 #include "DREndcapTubesRunAction.hh"
+#include "DREndcapTubesEvtAction.hh"
 
 #define DREndcapTubesSDDebug
 
@@ -55,7 +56,8 @@ namespace dd4hep {
       }
 
       void beginRun(const G4Run* run){
-        fRunAction = new DREndcapTubesRunAction();
+        fRunAction = new DREndcapTubesRunAction;
+	fEvtAction = new DREndcapTubesEvtAction;
         fRunAction->BeginOfRunAction(run);
       }
 
@@ -63,11 +65,20 @@ namespace dd4hep {
         fRunAction->EndOfRunAction(run);
       }
 
+      void beginEvent(const G4Event* event){
+        fEvtAction->BeginOfEventAction(event);
+      }
+
+      void endEvent(const G4Event* event){
+        fEvtAction->EndOfEventAction(event);
+      }
+
     // Fields
     //
     public:
       double eDep = 0.;
       DREndcapTubesRunAction* fRunAction;
+      DREndcapTubesEvtAction* fEvtAction;
       Geant4Sensitive*  sensitive{};
     };
   } // namespace sim
@@ -79,6 +90,9 @@ namespace dd4hep {
     // Function template specialization of Geant4SensitiveAction class.
     // Define actions
     template <> void Geant4SensitiveAction<DREndcapTubesSD>::initialize() {
+
+      eventAction().callAtBegin(&m_userData, &DREndcapTubesSD::beginEvent);
+      eventAction().callAtEnd(&m_userData, &DREndcapTubesSD::endEvent);
 
       runAction().callAtBegin(&m_userData,&DREndcapTubesSD::beginRun);
       runAction().callAtEnd(&m_userData,&DREndcapTubesSD::endRun);

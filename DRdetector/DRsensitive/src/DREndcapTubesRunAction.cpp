@@ -35,25 +35,25 @@ namespace dd4hep {
       //
       auto analysisManager = G4AnalysisManager::Instance();
       analysisManager->SetVerboseLevel( 1 );
-      analysisManager->SetNtupleMerging( 1 );
+      //analysisManager->SetNtupleMerging( 1 ); not available in sequential mode
 
       // Create ntuple
       //
-      analysisManager->CreateNtuple("DREncapTubesout", "DRCaloTubesoutput");
+      analysisManager->CreateNtuple("DREndcapTubesout", "DREndcapTubesoutput");
       analysisManager->CreateNtupleDColumn("EnergyScin");     //0
-      analysisManager->CreateNtupleDColumn("EnergyCher");     //1
-      analysisManager->CreateNtupleDColumn("NofCherDet");     //2
-      analysisManager->CreateNtupleDColumn("NofScinDet");     //3
-      analysisManager->CreateNtupleDColumn("PrimaryEnergy");  //4
-      analysisManager->CreateNtupleDColumn("PrimaryPDGID");   //5
-      analysisManager->CreateNtupleDColumn("PrimaryX");       //6
-      analysisManager->CreateNtupleDColumn("PrimaryY");       //7
-      analysisManager->CreateNtupleDColumn("PrimaryZ");       //8
-      analysisManager->CreateNtupleDColumn("PrimaryPX");      //9
-      analysisManager->CreateNtupleDColumn("PrimaryPY");      //10
-      analysisManager->CreateNtupleDColumn("PrimaryPZ");      //11
-      analysisManager->CreateNtupleDColumn("Leakage");        //12
-      analysisManager->CreateNtupleDColumn("NeutrinoLeakage");//13
+      //analysisManager->CreateNtupleDColumn("EnergyCher");     //1
+      //analysisManager->CreateNtupleDColumn("NofCherDet");     //2
+      //analysisManager->CreateNtupleDColumn("NofScinDet");     //3
+      //analysisManager->CreateNtupleDColumn("PrimaryEnergy");  //4
+      //analysisManager->CreateNtupleDColumn("PrimaryPDGID");   //5
+      //analysisManager->CreateNtupleDColumn("PrimaryX");       //6
+      //analysisManager->CreateNtupleDColumn("PrimaryY");       //7
+      //analysisManager->CreateNtupleDColumn("PrimaryZ");       //8
+      //analysisManager->CreateNtupleDColumn("PrimaryPX");      //9
+      //analysisManager->CreateNtupleDColumn("PrimaryPY");      //10
+      //analysisManager->CreateNtupleDColumn("PrimaryPZ");      //11
+      //analysisManager->CreateNtupleDColumn("Leakage");        //12
+      //analysisManager->CreateNtupleDColumn("NeutrinoLeakage");//13
       // Vectors are automatically filled by the analysisManager when
       // the addNtupleRow method is called at the end of each event,
       // therefore I keep these entries as the last ones.
@@ -67,7 +67,7 @@ namespace dd4hep {
     // Define BeginOfRunAction() and EndOfRunAction() methods
     //
     void DREndcapTubesRunAction::BeginOfRunAction( const G4Run* Run )  { 
-            
+
       // Create output file, one per Run
       //
       auto analysisManager = G4AnalysisManager::Instance();
@@ -78,7 +78,7 @@ namespace dd4hep {
     }
 
     void DREndcapTubesRunAction::EndOfRunAction( const G4Run* ) {
-        
+
       auto analysisManager = G4AnalysisManager::Instance();
       analysisManager->Write();
       analysisManager->CloseFile();
