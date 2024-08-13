@@ -60,7 +60,7 @@ SIM.gun.distribution = None
 ## Total energy (including mass) for the particle gun.
 ## 
 ## If not None, it will overwrite the setting of momentumMin and momentumMax
-SIM.gun.energy = None
+SIM.gun.energy = 5.0*GeV
 
 ## Maximal pseudorapidity for random distibution (overrides thetaMin)
 SIM.gun.etaMax = None
@@ -76,10 +76,10 @@ SIM.gun.etaMin = None
 SIM.gun.isotrop = False
 
 ## Maximal momentum when using distribution (default = 0.0)
-SIM.gun.momentumMax = 5.0*GeV
+## SIM.gun.momentumMax = 5.0*GeV
 
 ## Minimal momentum when using distribution (default = 0.0)
-SIM.gun.momentumMin = 0.0
+## SIM.gun.momentumMin = 0.0
 SIM.gun.multiplicity = 1
 SIM.gun.particle = "mu-"
 
