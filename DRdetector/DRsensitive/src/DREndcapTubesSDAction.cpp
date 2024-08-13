@@ -32,7 +32,7 @@
 #include "DREndcapTubesEvtAction.hh"
 #include "DREndcapTubesStepAction.hh"
 
-#define DREndcapTubesSDDebug
+//#define DREndcapTubesSDDebug
 
 namespace dd4hep {
   namespace sim {

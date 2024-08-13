@@ -75,10 +75,24 @@ namespace dd4hep {
       // Since G4-11.0 the output file format is deducted from extension (.root)
       G4String outputfile = "DREndcapTubesout_Run"+runnumber+".root";
       analysisManager->OpenFile( outputfile );
+
+      fTimer.Start(); // start timer for event processing
     }
 
-    void DREndcapTubesRunAction::EndOfRunAction( const G4Run* ) {
+    void DREndcapTubesRunAction::EndOfRunAction( const G4Run* aRun ) {
 
+      //Stop timer and printout time
+      //
+      fTimer.Stop();
+      G4int events = aRun->GetNumberOfEvent();
+      G4cout << " ====================================================================== " << G4endl;
+      G4cout << "  --> DREndcapTubes: run terminated, " << events << " events transported" << G4endl;
+      G4cout << "  --> DREndcapTubes: time: " << fTimer << G4endl;
+      G4cout << "  --> DREndcapTubes: time per event: "<< fTimer.GetUserElapsed()/static_cast<double>(events) << G4endl;
+      G4cout << " ====================================================================== " << G4endl;
+
+      // Write and close root output file
+      //
       auto analysisManager = G4AnalysisManager::Instance();
       analysisManager->Write();
       analysisManager->CloseFile();

@@ -13,6 +13,7 @@
 //
 #include "G4UserRunAction.hh"
 #include "globals.hh"
+#include "G4Timer.hh"
 
 // Includers from project files
 //#include "DREndcapTubesEventAction.h"
@@ -38,6 +39,7 @@ namespace dd4hep {
 	// Fields
         private:
           //DREndcapTubesEventAction* fEventAction;
+	  G4Timer fTimer;
 
     };
   }
