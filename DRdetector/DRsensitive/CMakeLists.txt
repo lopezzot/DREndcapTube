@@ -5,7 +5,7 @@ file(GLOB sources
 )
 
 file(GLOB headers
-  ${PROJECT_SOURCE_DIR}/include/*.h
+  ${PROJECT_SOURCE_DIR}/include/*.hh
 )
 
 add_library(DRsensitive SHARED ${sources} ${headers})

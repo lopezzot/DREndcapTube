@@ -7,20 +7,84 @@
 //**************************************************************************
 
 // Includers from DD4HEP
-#include <DDG4/Geant4SensDetAction.inl>
-#include <DDG4/Geant4ParticleInformation.h>
-#include <DDG4/Factories.h>
+//#include <DDG4/Geant4SensDetAction.inl>
+//#include <DDG4/Geant4ParticleInformation.h>
+//#include <DDG4/Factories.h>
+
+#include "DD4hep/Version.h"
+#include "DDG4/Geant4SensDetAction.inl"
+#include "DDG4/Factories.h"
+#include "DDG4/Geant4EventAction.h"
+#include "DDG4/Geant4RunAction.h"
+#include "DDG4/Geant4GeneratorAction.h"
+#include "DDG4/Geant4Mapping.h"
+#include "G4OpticalPhoton.hh"
+#include "G4VProcess.hh"
+#include "G4UserSteppingAction.hh"
+#include "G4Types.hh"
+#include "G4Poisson.hh"
+#include "globals.hh"
+#include "G4ProcessManager.hh"
+#include "G4OpBoundaryProcess.hh"
+
+// Includers from project files
+#include "DREndcapTubesRunAction.hh"
 
 #define DREndcapTubesSDDebug
 
-class DREndcapTubesSD {
+namespace dd4hep {
+  namespace sim {
+    class DREndcapTubesSD {
+
+    // Constructor and destructor
+    //
+    public:
+      DREndcapTubesSD() = default;
+      ~DREndcapTubesSD() = default;  
+
+    // Methods
+    //
+    public:
+      void clar() {
+        // nothing to clear
+      }
+
+      // Method for generating hit(s)
+      G4bool process(G4Step* /*const step*/, G4TouchableHistory*) {
+        return true;
+      }
+
+      void beginRun(const G4Run* run){
+        fRunAction = new DREndcapTubesRunAction();
+        fRunAction->BeginOfRunAction(run);
+      }
+
+      void endRun(const G4Run* run){
+        fRunAction->EndOfRunAction(run);
+      }
+
+    // Fields
+    //
     public:
       double eDep = 0.;
-};
+      DREndcapTubesRunAction* fRunAction;
+      Geant4Sensitive*  sensitive{};
+    };
+  } // namespace sim
+} // namespace dd4hep
 
 namespace dd4hep {
-
   namespace sim   {
+
+    // Function template specialization of Geant4SensitiveAction class.
+    // Define actions
+    template <> void Geant4SensitiveAction<DREndcapTubesSD>::initialize() {
+
+      runAction().callAtBegin(&m_userData,&DREndcapTubesSD::beginRun);
+      runAction().callAtEnd(&m_userData,&DREndcapTubesSD::endRun);
+
+      m_userData.sensitive = this;
+    }
 
     // Function template specialization of Geant4SensitiveAction class.
     // Define collections created by this sensitivie action object
