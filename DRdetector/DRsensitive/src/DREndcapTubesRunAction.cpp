@@ -85,11 +85,11 @@ namespace dd4hep {
       //
       fTimer.Stop();
       G4int events = aRun->GetNumberOfEvent();
-      G4cout << " ====================================================================== " << G4endl;
-      G4cout << "  --> DREndcapTubes: run terminated, " << events << " events transported" << G4endl;
-      G4cout << "  --> DREndcapTubes: time: " << fTimer << G4endl;
-      G4cout << "  --> DREndcapTubes: time per event: "<< fTimer.GetUserElapsed()/static_cast<double>(events) << G4endl;
-      G4cout << " ====================================================================== " << G4endl;
+      G4cout << "====================================================================== " << G4endl;
+      G4cout << " --> DREndcapTubes: run terminated, " << events << " events transported" << G4endl;
+      G4cout << " --> DREndcapTubes: time: " << fTimer << G4endl;
+      G4cout << " --> DREndcapTubes: time per event: "<< fTimer.GetUserElapsed()/static_cast<double>(events) << G4endl;
+      G4cout << "====================================================================== " << G4endl;
 
       // Write and close root output file
       //
