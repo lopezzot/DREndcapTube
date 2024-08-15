@@ -62,6 +62,8 @@ class DREndcapTubesSglHpr {
       return AttenuateHelper(signal, distance, fCAttenuationLength);
     }
 
+    inline static G4ThreeVector CalculateSiPMPosition(const G4Step* step);
+
 };
 
 inline G4double DREndcapTubesSglHpr::GetDistanceToSiPM(const G4Step* step) {
@@ -72,7 +74,6 @@ inline G4double DREndcapTubesSglHpr::GetDistanceToSiPM(const G4Step* step) {
   G4ThreeVector globalPos = preStepPoint->GetPosition();
   // Get the local position of the pre-step point in the current volume's coordinate system
   G4ThreeVector localPos = preStepPoint->GetTouchableHandle()->GetHistory()->GetTopTransform().TransformPoint(globalPos);
-  // G4cout << "Local Position (X,Y,Z): (" << localPos.x()/CLHEP::mm << ", " << localPos.y()/CLHEP::mm << ", " << localPos.z()/CLHEP::mm << ") mm" << G4endl;
 
   // Get the logical volume of the current step
   G4LogicalVolume* currentVolume = preStepPoint->GetTouchableHandle()->GetVolume()->GetLogicalVolume();
@@ -80,6 +81,7 @@ inline G4double DREndcapTubesSglHpr::GetDistanceToSiPM(const G4Step* step) {
   G4Tubs* solid = dynamic_cast<G4Tubs*>(currentVolume->GetSolid());
   // Get the dimensions of the solid (size of the volume)
   G4double size = solid->GetZHalfLength();
+  std::cout<<"fiber length "<<size*2.<<std::endl;
 
   G4double distance_to_sipm = size - localPos.z();
   return distance_to_sipm;
@@ -95,6 +97,30 @@ inline G4int DREndcapTubesSglHpr::AttenuateHelper(const G4int& signal, const G4d
     if (G4UniformRand() <= probability_of_survival) survived_photons++;
   }
   return survived_photons;
+}
+
+inline G4ThreeVector DREndcapTubesSglHpr::CalculateSiPMPosition(const G4Step* step) {
+
+  G4TouchableHandle theTouchable = step->GetPreStepPoint()->GetTouchableHandle();
+  G4ThreeVector origin(0.,0.,0.);
+  G4ThreeVector zdir(0.,0.,1.);
+  G4ThreeVector vectPos = theTouchable->GetHistory()-> GetTopTransform().Inverse().TransformPoint(origin);
+  G4ThreeVector direction = theTouchable->GetHistory()->GetTopTransform().Inverse().TransformAxis(zdir);
+
+  // Get the logical volume of the current step
+  G4LogicalVolume* currentVolume = step->GetPreStepPoint()->GetTouchableHandle()->GetVolume()->GetLogicalVolume();
+  // Get the solid associated with the logical volume
+  G4Tubs* solid = dynamic_cast<G4Tubs*>(currentVolume->GetSolid());
+  // Get the dimensions of the solid (size of the volume)
+  G4double size = solid->GetZHalfLength();
+  G4double lengthfiber = size*2.;
+  G4ThreeVector Halffibervect = direction*lengthfiber/2;
+  // Fibre tip position
+  // G4ThreeVector vectPostip = vectPos-Halffibervect;
+  // SiPM position
+  G4ThreeVector SiPMvecPos = vectPos+Halffibervect;
+
+  return SiPMvecPos;
 }
 
 #endif // DREndcapTubesSglHpr_h

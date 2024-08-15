@@ -187,6 +187,9 @@ namespace dd4hep {
         hit = new Geant4Calorimeter::Hit();
         hit->cellID = VolID; // this should be assigned only once
 	hit->flag = CherenkovID; // this should be assigned only once
+	G4ThreeVector SiPMVec = DREndcapTubesSglHpr::CalculateSiPMPosition(aStep);
+	Position SiPMPos(SiPMVec.x(),SiPMVec.y(),SiPMVec.z());
+	hit->position = SiPMPos;
         hit->energyDeposit += signalhit;
         coll->add(VolID, hit); // add the hit to the hit collection
       }
