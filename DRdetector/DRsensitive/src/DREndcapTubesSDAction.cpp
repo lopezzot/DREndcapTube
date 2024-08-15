@@ -26,13 +26,14 @@
 #include "globals.hh"
 #include "G4ProcessManager.hh"
 #include "G4OpBoundaryProcess.hh"
+#include "DD4hep/Segmentations.h"
 
 // Includers from project files
 #include "DREndcapTubesRunAction.hh"
 #include "DREndcapTubesEvtAction.hh"
 #include "DREndcapTubesStepAction.hh"
 
-//#define DREndcapTubesSDDebug
+#define DREndcapTubesSDDebug
 
 namespace dd4hep {
   namespace sim {
@@ -105,30 +106,113 @@ namespace dd4hep {
     // Function template specialization of Geant4SensitiveAction class.
     // Define collections created by this sensitivie action object
     template <> void Geant4SensitiveAction<DREndcapTubesSD>::defineCollections()    {
-      //m_collectionID = declareReadoutFilteredCollection<MyTrackerSD::Hit>();
+      m_collectionID = declareReadoutFilteredCollection<Geant4Calorimeter::Hit>();
     }
 
     // Function template specialization of Geant4SensitiveAction class.
     // Method that accesses the G4Step object at each track step.
     template <> bool Geant4SensitiveAction<DREndcapTubesSD>::process(const G4Step* aStep, G4TouchableHistory* history ) {
     
+      dd4hep::BitFieldCoder decoder("tank:1,endcap:1,stave:10,tower:8,air:1,col:10,row:7,clad:1,core:1,cherenkov:1");
+      auto VolID = volumeID(aStep);
+      auto EndcapID = decoder.get(VolID,"endcap");
+      auto StaveID = decoder.get(VolID,"stave");
+      auto TowerID = decoder.get(VolID,"tower");
+      auto AirID = decoder.get(VolID,"air");
+      auto ColID = decoder.get(VolID,"col");
+      auto RowID = decoder.get(VolID,"row");
+      auto CladID = decoder.get(VolID,"clad");
+      auto CoreID = decoder.get(VolID,"core");
+      auto CherenkovID = decoder.get(VolID,"cherenkov");
+
       #ifdef DREndcapTubesSDDebug
       //Print out some info step-by-step in sensitive volumes
       //
-      std::cout<<"Track #: "<< aStep->GetTrack()->GetTrackID()<< " " <<
+      std::cout<<"-------------------------------"<<std::endl;
+      std::cout<<"--> DREndcapTubes: track info: "<<std::endl;
+      std::cout<<"----> Track #: "<< aStep->GetTrack()->GetTrackID()<< " " <<
                  "Step #: " << aStep->GetTrack()->GetCurrentStepNumber()<< " "<<
                  "Volume: " << aStep->GetPreStepPoint()->GetTouchableHandle()->GetVolume()->GetName()<< " " << std::endl;
-      std::cout<<"x: "<< aStep->GetPreStepPoint()->GetPosition().x() <<
+      std::cout<<"--> DREndcapTubes:: position info: "<<std::endl;
+      std::cout<<"----> x: "<< aStep->GetPreStepPoint()->GetPosition().x() <<
                  "y: "<< aStep->GetPreStepPoint()->GetPosition().y() <<
                  "z: "<< aStep->GetPreStepPoint()->GetPosition().z() << std::endl;
-      std::cout<<"Particle "<< aStep->GetTrack()->GetParticleDefinition()->GetParticleName()<< " " <<
+      std::cout<<"--> DREndcapTubes: particle info: "<<std::endl;
+      std::cout<<"----> Particle "<< aStep->GetTrack()->GetParticleDefinition()->GetParticleName()<< " " <<
                  "Dep(MeV) "<< aStep->GetTotalEnergyDeposit() << " " <<
                  "Mat "     << aStep->GetPreStepPoint()->GetMaterial()->GetName() << " " << 
                  "Vol "     << aStep->GetPreStepPoint()->GetTouchableHandle()->GetVolume()->GetName() << std::endl; 
+      std::cout<<"--> DREndcapTubes: physVolID info: "<<std::endl;
+      std::cout<<"----> Volume ID "<<volumeID(aStep)<<" Endcap ID "<<EndcapID<<" Stave ID "<<StaveID<<std::endl;
+      std::cout<<"----> Tower ID "<<TowerID<<" Air ID "<<AirID<<std::endl;
+      std::cout<<"----> Col ID "<<ColID<<" Row ID "<<RowID<<std::endl;
+      std::cout<<"----> Clad ID "<<CladID<<" Core ID "<<CoreID<<" Cherenkov ID "<<CherenkovID<<std::endl;
       #endif 
-
+/*
       // Process this step information
-      m_userData.process(aStep, history);
+      //
+      //m_userData.process(aStep, history);
+      G4VPhysicalVolume* volume = step->GetPreStepPoint()->GetTouchableHandle()->GetVolume();
+      G4double edep = step->GetTotalEnergyDeposit();
+      G4double steplength = step->GetStepLength();
+      std::string volume_name = volume->GetName(); 
+      
+      // Process signal in scintillating and Cherenkov fibers separately
+      G4int signalhit = 0;
+
+      if ( volume_name.substr(0, 10) == "scin_fibre" ) { //scintillating fiber/tube
+                
+        fEventAction->AddEdepScin(edep);
+        //G4VPhysicalVolume* step_vol  = step->GetTrack()->GetVolume();
+        //std::cout<<"Step Volume in Geant4: " << step_vol->GetName() <<" : " << std::to_string(step_vol->GetCopyNo())<<std::end/l;
+        if ( step->GetTrack()->GetParticleDefinition() == G4OpticalPhoton::Definition() ) {
+          step->GetTrack()->SetTrackStatus( fStopAndKill );
+        }
+
+        if ( step->GetTrack()->GetDefinition()->GetPDGCharge() == 0 || step->GetStepLength() == 0. ) { return; } //not ionizing particle
+
+        G4double distance_to_sipm = DRCaloTubesSteppingAction::GetDistanceToSiPM(step);
+        // std::cout<<"UserSteppingAction:: Distance to SiPM: " << distance_to_sipm/CLHEP::mm << " mm" <<std::endl;
+        signalhit = DRCaloTubesSteppingAction::SmearSSignal( DRCaloTubesSteppingAction::ApplyBirks( edep, steplength ) );
+        signalhit = DRCaloTubesSteppingAction::AttenuateSSignal(signalhit, distance_to_sipm);
+        fEventAction->AddScin(signalhit);
+        auto handle = step->GetPreStepPoint()->GetTouchableHandle();
+        unsigned int fibre_id = handle->GetCopyNumber(2);
+        short int layer_id = handle->GetCopyNumber(4);
+        unsigned short int stave_id = handle->GetCopyNumber(5);
+        int tower_id = (layer_id << 16) | stave_id;
+        // G4cout << "Fibre ID: " << fibre_id << " Layer ID: " << layer_id << " Stave ID: " << stave_id << " Tower ID: " << tower_id << G4endl;
+        fEventAction->AddFibreSignal(tower_id, fibre_id, signalhit);
+        // fEventAction->AddFibreScin(fibre_id, signalhit);
+      } // end of scintillating fibre
+
+
+
+
+*/
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
       /*Geant4StepHandler h(step);
       Position  prePos    = h.prePos();
       Position  postPos   = h.postPos();
