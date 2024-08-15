@@ -32,6 +32,7 @@
 #include "DREndcapTubesRunAction.hh"
 #include "DREndcapTubesEvtAction.hh"
 #include "DREndcapTubesStepAction.hh"
+#include "DREndcapTubesSglHpr.hh"
 
 #define DREndcapTubesSDDebug
 
@@ -111,8 +112,12 @@ namespace dd4hep {
 
     // Function template specialization of Geant4SensitiveAction class.
     // Method that accesses the G4Step object at each track step.
-    template <> bool Geant4SensitiveAction<DREndcapTubesSD>::process(const G4Step* aStep, G4TouchableHistory* history ) {
+    template <> bool Geant4SensitiveAction<DREndcapTubesSD>::process(const G4Step* aStep, G4TouchableHistory* /*history*/ ) {
     
+      // Skip this step if energy deposit in fiber is 0
+      G4double Edep = aStep->GetTotalEnergyDeposit();
+      if(Edep == 0.) return true;
+
       dd4hep::BitFieldCoder decoder("tank:1,endcap:1,stave:10,tower:8,air:1,col:10,row:7,clad:1,core:1,cherenkov:1");
       auto VolID = volumeID(aStep);
       auto EndcapID = decoder.get(VolID,"endcap");
@@ -124,6 +129,8 @@ namespace dd4hep {
       auto CladID = decoder.get(VolID,"clad");
       auto CoreID = decoder.get(VolID,"core");
       auto CherenkovID = decoder.get(VolID,"cherenkov");
+
+      G4bool IsCherenkov = CherenkovID; // 1 for cherenkov 0 for scintillating fibers
 
       #ifdef DREndcapTubesSDDebug
       //Print out some info step-by-step in sensitive volumes
@@ -148,48 +155,45 @@ namespace dd4hep {
       std::cout<<"----> Col ID "<<ColID<<" Row ID "<<RowID<<std::endl;
       std::cout<<"----> Clad ID "<<CladID<<" Core ID "<<CoreID<<" Cherenkov ID "<<CherenkovID<<std::endl;
       #endif 
-/*
-      // Process this step information
+
+      // We now calculate the signal in S and C fiber according to the step contribution
       //
-      //m_userData.process(aStep, history);
-      G4VPhysicalVolume* volume = step->GetPreStepPoint()->GetTouchableHandle()->GetVolume();
-      G4double edep = step->GetTotalEnergyDeposit();
-      G4double steplength = step->GetStepLength();
-      std::string volume_name = volume->GetName(); 
-      
-      // Process signal in scintillating and Cherenkov fibers separately
+      G4double steplength = aStep->GetStepLength();
       G4int signalhit = 0;
 
-      if ( volume_name.substr(0, 10) == "scin_fibre" ) { //scintillating fiber/tube
+      if(!IsCherenkov){ // it is a scintillating fiber
                 
-        fEventAction->AddEdepScin(edep);
-        //G4VPhysicalVolume* step_vol  = step->GetTrack()->GetVolume();
-        //std::cout<<"Step Volume in Geant4: " << step_vol->GetName() <<" : " << std::to_string(step_vol->GetCopyNo())<<std::end/l;
-        if ( step->GetTrack()->GetParticleDefinition() == G4OpticalPhoton::Definition() ) {
-          step->GetTrack()->SetTrackStatus( fStopAndKill );
+        if ( aStep->GetTrack()->GetParticleDefinition() == G4OpticalPhoton::Definition() ) {
+          aStep->GetTrack()->SetTrackStatus( fStopAndKill );
         }
 
-        if ( step->GetTrack()->GetDefinition()->GetPDGCharge() == 0 || step->GetStepLength() == 0. ) { return; } //not ionizing particle
+        if ( aStep->GetTrack()->GetDefinition()->GetPDGCharge() == 0 || steplength == 0. ) {
+	    return true; // not ionizing particle
+	}
 
-        G4double distance_to_sipm = DRCaloTubesSteppingAction::GetDistanceToSiPM(step);
-        // std::cout<<"UserSteppingAction:: Distance to SiPM: " << distance_to_sipm/CLHEP::mm << " mm" <<std::endl;
-        signalhit = DRCaloTubesSteppingAction::SmearSSignal( DRCaloTubesSteppingAction::ApplyBirks( edep, steplength ) );
-        signalhit = DRCaloTubesSteppingAction::AttenuateSSignal(signalhit, distance_to_sipm);
-        fEventAction->AddScin(signalhit);
-        auto handle = step->GetPreStepPoint()->GetTouchableHandle();
-        unsigned int fibre_id = handle->GetCopyNumber(2);
-        short int layer_id = handle->GetCopyNumber(4);
-        unsigned short int stave_id = handle->GetCopyNumber(5);
-        int tower_id = (layer_id << 16) | stave_id;
-        // G4cout << "Fibre ID: " << fibre_id << " Layer ID: " << layer_id << " Stave ID: " << stave_id << " Tower ID: " << tower_id << G4endl;
-        fEventAction->AddFibreSignal(tower_id, fibre_id, signalhit);
-        // fEventAction->AddFibreScin(fibre_id, signalhit);
-      } // end of scintillating fibre
+        G4double distance_to_sipm = DREndcapTubesSglHpr::GetDistanceToSiPM(aStep);
+        signalhit = DREndcapTubesSglHpr::SmearSSignal( DREndcapTubesSglHpr::ApplyBirks( Edep, steplength ) );
+        signalhit = DREndcapTubesSglHpr::AttenuateSSignal(signalhit, distance_to_sipm);
+      } // end of scintillating fibre sigal calculation
 
+      else{return true;}
 
+      // We are going to create an hit per each fiber with a signal above 0
+      // Each fiber is identified with a unique volID 
+      //
+      Geant4HitCollection* coll    = collection(m_collectionID); // hit collection
+      Geant4Calorimeter::Hit* hit  = coll->findByKey<Geant4Calorimeter::Hit>(VolID); // the hit
+      if(!hit){ // if the hit does not exist yet, create it
+        hit = new Geant4Calorimeter::Hit();
+        hit->cellID = VolID; // this should be assigned only once
+	hit->flag = CherenkovID; // this should be assigned only once
+        hit->energyDeposit += signalhit;
+        coll->add(VolID, hit); // add the hit to the hit collection
+      }
+      else { // if the hit exists already, increment its fields
+        hit->energyDeposit += signalhit;
+      }
 
-
-*/
 
 
 
