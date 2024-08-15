@@ -159,7 +159,7 @@ static Ref_t create_detector(Detector &description, xml_h e, SensitiveDetector s
   // ID this volume with clad (0/1) core (0/1) and cherekov (0/1) ids
   clad_SPlaced.addPhysVolID("clad",1).addPhysVolID("core",0).addPhysVolID("cherenkov",0);
   Tube core_S(0.*mm, coreRadius, tower_height/2., 2*M_PI); // core S
-  Volume core_SLog("core_SLog",core_S,description.material(x_core_S.attr<std::string>(_U(material))));
+  Volume core_SLog("coreS_Log",core_S,description.material(x_core_S.attr<std::string>(_U(material))));
   core_SLog.setVisAttributes(description, x_core_S.visStr());
   if (x_core_S_sens) core_SLog.setSensitiveDetector(sens);
   PlacedVolume core_SPlaced = clad_SLog.placeVolume(core_SLog);
@@ -175,7 +175,7 @@ static Ref_t create_detector(Detector &description, xml_h e, SensitiveDetector s
   PlacedVolume clad_CPlaced = capillary_CLog.placeVolume(clad_CLog,Position(0.,0.,0.));
   clad_CPlaced.addPhysVolID("clad",1).addPhysVolID("core",0).addPhysVolID("cherenkov",1);
   Tube core_C(0.*mm, coreRadius, tower_height/2., 2*M_PI); // core C
-  Volume core_CLog("core_CLog",core_C,description.material(x_core_C.attr<std::string>(_U(material))));
+  Volume core_CLog("coreC_Log",core_C,description.material(x_core_C.attr<std::string>(_U(material))));
   core_CLog.setVisAttributes(description, x_core_C.visStr());
   if (x_core_C_sens) core_CLog.setSensitiveDetector(sens);
   PlacedVolume core_CPlaced = clad_CLog.placeVolume(core_CLog);
@@ -336,7 +336,7 @@ static Ref_t create_detector(Detector &description, xml_h e, SensitiveDetector s
            PlacedVolume cladShort_SPlaced = capillaryShortLog.placeVolume(cladShort_SLog,Position(0.,0.,0.));
            cladShort_SPlaced.addPhysVolID("clad",1).addPhysVolID("core",0).addPhysVolID("cherenkov",0);
            Tube coreShort_S(0.*mm, coreRadius, (capillaryLength-TubeLengthOffset)/2., 2*M_PI); // core S
-           Volume coreShort_SLog("coreShort_SLog",coreShort_S,description.material(x_core_S.attr<std::string>(_U(material))));
+           Volume coreShort_SLog("coreSShort_Log",coreShort_S,description.material(x_core_S.attr<std::string>(_U(material))));
            coreShort_SLog.setVisAttributes(description, x_core_S.visStr());
            if (x_core_S_sens) coreShort_SLog.setSensitiveDetector(sens);
            PlacedVolume coreShort_SPlaced = cladShort_SLog.placeVolume(coreShort_SLog);
@@ -389,7 +389,7 @@ static Ref_t create_detector(Detector &description, xml_h e, SensitiveDetector s
                PlacedVolume cladShort_CPlaced = capillaryShortLog_C.placeVolume(cladShort_CLog,Position(0.,0.,0.));
                cladShort_CPlaced.addPhysVolID("clad",1).addPhysVolID("core",0).addPhysVolID("cherenkov",1);
                Tube coreShort_C(0.*mm, coreRadius, (capillaryLength_C-TubeLengthOffset)/2., 2*M_PI); // core C
-               Volume coreShort_CLog("coreShort_CLog",coreShort_C,description.material(x_core_C.attr<std::string>(_U(material))));
+               Volume coreShort_CLog("coreCShort_Log",coreShort_C,description.material(x_core_C.attr<std::string>(_U(material))));
                coreShort_CLog.setVisAttributes(description, x_core_C.visStr());
                if (x_core_C_sens) coreShort_CLog.setSensitiveDetector(sens);
                PlacedVolume coreShort_CPlaced = cladShort_CLog.placeVolume(coreShort_CLog);
