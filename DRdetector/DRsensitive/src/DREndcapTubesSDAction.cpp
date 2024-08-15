@@ -170,9 +170,10 @@ namespace dd4hep {
         if ( aStep->GetTrack()->GetDefinition()->GetPDGCharge() == 0 || steplength == 0. ) {
 	    return true; // not ionizing particle
 	}
-
         G4double distance_to_sipm = DREndcapTubesSglHpr::GetDistanceToSiPM(aStep);
         signalhit = DREndcapTubesSglHpr::SmearSSignal( DREndcapTubesSglHpr::ApplyBirks( Edep, steplength ) );
+        G4cout<<"EDep "<<Edep<<" distance_to_sipm "<<distance_to_sipm<<
+	    "after birk "<<DREndcapTubesSglHpr::ApplyBirks(Edep, steplength)<<" signalhit "<<signalhit<<G4endl;
         signalhit = DREndcapTubesSglHpr::AttenuateSSignal(signalhit, distance_to_sipm);
       } // end of scintillating fibre sigal calculation
 
@@ -191,10 +192,14 @@ namespace dd4hep {
 	Position SiPMPos(SiPMVec.x(),SiPMVec.y(),SiPMVec.z());
 	hit->position = SiPMPos;
         hit->energyDeposit += signalhit;
+	m_userData.fEvtAction->AddEdepScin(Edep);
+	m_userData.fEvtAction->AddSglScin(signalhit);
         coll->add(VolID, hit); // add the hit to the hit collection
       }
       else { // if the hit exists already, increment its fields
         hit->energyDeposit += signalhit;
+	m_userData.fEvtAction->AddEdepScin(Edep);
+	m_userData.fEvtAction->AddSglScin(signalhit);
       }
 
 

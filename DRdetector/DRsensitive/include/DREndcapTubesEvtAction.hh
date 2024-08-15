@@ -29,11 +29,13 @@ namespace dd4hep {
  
         // Inline methods
 	inline void AddEdepScin(G4double edep) { EnergyScin += edep; }
+	inline void AddSglScin(G4int scinsgl) { SglScin += scinsgl; }
 
       private:
 	// Fields
 	//
 	G4double EnergyScin;
+	G4int SglScin;
     };
   } // namespace sim
 } // namespace dd4hep

@@ -41,6 +41,7 @@ namespace dd4hep {
       //
       analysisManager->CreateNtuple("DREndcapTubesout", "DREndcapTubesoutput");
       analysisManager->CreateNtupleDColumn("EnergyScin");     //0
+      analysisManager->CreateNtupleIColumn("SglScin");        //1
       //analysisManager->CreateNtupleDColumn("EnergyCher");     //1
       //analysisManager->CreateNtupleDColumn("NofCherDet");     //2
       //analysisManager->CreateNtupleDColumn("NofScinDet");     //3
