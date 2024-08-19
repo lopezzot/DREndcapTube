@@ -34,7 +34,6 @@
 // Includers from project files
 #include "DREndcapTubesRunAction.hh"
 #include "DREndcapTubesEvtAction.hh"
-#include "DREndcapTubesStepAction.hh"
 #include "DREndcapTubesSglHpr.hh"
 
 #define DREndcapTubesSDDebug
@@ -52,14 +51,10 @@ namespace dd4hep {
     // Methods
     //
     public:
-      void clar() {
-        // nothing to clear
-      }
 
       void beginRun(const G4Run* run){
         fRunAction = new DREndcapTubesRunAction;
 	fEvtAction = new DREndcapTubesEvtAction;
-	fStepAction = new DREndcapTubesStepAction(fEvtAction);
         fRunAction->BeginOfRunAction(run);
       }
 
@@ -75,17 +70,11 @@ namespace dd4hep {
         fEvtAction->EndOfEventAction(event);
       }
 
-      void process(G4Step const * step, G4TouchableHistory* ) {
-        fStepAction->UserSteppingAction(step);
-      }
-
     // Fields
     //
     public:
-      double eDep = 0.;
       DREndcapTubesRunAction* fRunAction;
       DREndcapTubesEvtAction* fEvtAction;
-      DREndcapTubesStepAction* fStepAction;
       Geant4Sensitive*  sensitive{};
     };
   } // namespace sim
