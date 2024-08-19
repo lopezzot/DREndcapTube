@@ -280,7 +280,7 @@
        If a detector contains sub-detectors, their information must be included as below.
   -->
   <detectors>
-    <detector name="DREndcapTubes" type="DREndcapTubes" vis="TankVis" id ="0" readout="MyReadout">
+    <detector name="DREndcapTubes" type="DREndcapTubes" vis="TankVis" id ="0" readout="DREndcapTubesRO">
     <type_flags type=" DetType_CALORIMETER + DetType_ELECTROMAGNETIC + DetType_BARREL"/>
     <dimensions 
       inner_radius="innerRadius"
@@ -299,7 +299,7 @@
   </detectors>
 
   <readouts>
-    <readout name="MyReadout">
+    <readout name="DREndcapTubesRO">
       <segmentation type="CartesianGridXY" 
              grid_size_x="1*mm" 
              grid_size_y="1*mm"/>
