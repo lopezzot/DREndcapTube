@@ -20,14 +20,18 @@ namespace dd4hep {
     DREndcapTubesEvtAction::DREndcapTubesEvtAction()
       : G4UserEventAction(),
         EnergyScin(0.),
-        SglScin(0) {}
+        SglScin(0),
+        EnergyCher(0.),
+        SglCher(0) {}
     
     // Define BeginOfEventAction virtual method 
     //
     void DREndcapTubesEvtAction::BeginOfEventAction(const G4Event*) {
         
       EnergyScin = 0.;
-      SglScin = 0.;
+      SglScin = 0;
+      EnergyCher = 0.;
+      SglCher = 0;
     }
 
     // Define EndOfEventAction virtual method
@@ -38,6 +42,8 @@ namespace dd4hep {
       G4AnalysisManager* analysisManager = G4AnalysisManager::Instance();
       analysisManager->FillNtupleDColumn(0, EnergyScin);
       analysisManager->FillNtupleIColumn(1, SglScin);
+      analysisManager->FillNtupleDColumn(2, EnergyCher);
+      analysisManager->FillNtupleIColumn(3, SglCher);
       analysisManager->AddNtupleRow();
     }
 

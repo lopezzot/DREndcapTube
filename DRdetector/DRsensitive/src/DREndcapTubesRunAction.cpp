@@ -40,27 +40,10 @@ namespace dd4hep {
       // Create ntuple
       //
       analysisManager->CreateNtuple("DREndcapTubesout", "DREndcapTubesoutput");
-      analysisManager->CreateNtupleDColumn("EnergyScin");     //0
-      analysisManager->CreateNtupleIColumn("SglScin");        //1
-      //analysisManager->CreateNtupleDColumn("EnergyCher");     //1
-      //analysisManager->CreateNtupleDColumn("NofCherDet");     //2
-      //analysisManager->CreateNtupleDColumn("NofScinDet");     //3
-      //analysisManager->CreateNtupleDColumn("PrimaryEnergy");  //4
-      //analysisManager->CreateNtupleDColumn("PrimaryPDGID");   //5
-      //analysisManager->CreateNtupleDColumn("PrimaryX");       //6
-      //analysisManager->CreateNtupleDColumn("PrimaryY");       //7
-      //analysisManager->CreateNtupleDColumn("PrimaryZ");       //8
-      //analysisManager->CreateNtupleDColumn("PrimaryPX");      //9
-      //analysisManager->CreateNtupleDColumn("PrimaryPY");      //10
-      //analysisManager->CreateNtupleDColumn("PrimaryPZ");      //11
-      //analysisManager->CreateNtupleDColumn("Leakage");        //12
-      //analysisManager->CreateNtupleDColumn("NeutrinoLeakage");//13
-      // Vectors are automatically filled by the analysisManager when
-      // the addNtupleRow method is called at the end of each event,
-      // therefore I keep these entries as the last ones.
-      //analysisManager->CreateNtupleDColumn("TowerID", fEventAction->GetTowerIDs());   //14
-      //analysisManager->CreateNtupleDColumn("FibreID", fEventAction->GetFibreIDs());   //15
-      //analysisManager->CreateNtupleDColumn("NofDet", fEventAction->GetFibreSignals());//16
+      analysisManager->CreateNtupleDColumn("EnergyScin"); //0
+      analysisManager->CreateNtupleIColumn("SglScin");    //1
+      analysisManager->CreateNtupleDColumn("EnergyCher"); //2
+      analysisManager->CreateNtupleIColumn("SglCher");    //3
       analysisManager->FinishNtuple();
     } // end of constructor
 

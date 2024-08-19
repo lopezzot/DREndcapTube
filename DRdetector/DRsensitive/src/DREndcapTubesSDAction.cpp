@@ -172,12 +172,13 @@ namespace dd4hep {
 	}
         G4double distance_to_sipm = DREndcapTubesSglHpr::GetDistanceToSiPM(aStep);
         signalhit = DREndcapTubesSglHpr::SmearSSignal( DREndcapTubesSglHpr::ApplyBirks( Edep, steplength ) );
-        G4cout<<"EDep "<<Edep<<" distance_to_sipm "<<distance_to_sipm<<
-	    "after birk "<<DREndcapTubesSglHpr::ApplyBirks(Edep, steplength)<<" signalhit "<<signalhit<<G4endl;
         signalhit = DREndcapTubesSglHpr::AttenuateSSignal(signalhit, distance_to_sipm);
       } // end of scintillating fibre sigal calculation
 
-      else{return true;}
+      else{
+	m_userData.fEvtAction->AddEdepCher(Edep);
+	return true;
+      }
 
       // We are going to create an hit per each fiber with a signal above 0
       // Each fiber is identified with a unique volID 
