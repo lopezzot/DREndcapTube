@@ -15,7 +15,7 @@ SIM.enableGun = True
 ## Macro file to execute for runType 'run' or 'vis'
 SIM.macroFile = ""
 ## number of events to simulate, used in batch mode
-SIM.numberOfEvents = 500
+SIM.numberOfEvents = 1000
 ## Outputfile from the simulation: .slcio, edm4hep.root and .root output files are supported
 SIM.outputFile = "edm4hep_test.root"
 ## Physics list to use in simulation
@@ -90,7 +90,7 @@ SIM.gun.phiMax = None
 SIM.gun.phiMin = None
 
 ##  position of the particle gun, 3 vector 
-SIM.gun.position = (0.0, 100.0*cm, 0.0)
+SIM.gun.position = (0.0, 90.0*cm, 0.0)
 
 ## Maximal polar angle for random distribution
 SIM.gun.thetaMax = None
