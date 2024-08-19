@@ -28,13 +28,16 @@
 #include "G4OpBoundaryProcess.hh"
 #include "DD4hep/Segmentations.h"
 
+// Includers from Geant4
+#include "G4OpBoundaryProcess.hh"
+
 // Includers from project files
 #include "DREndcapTubesRunAction.hh"
 #include "DREndcapTubesEvtAction.hh"
 #include "DREndcapTubesStepAction.hh"
 #include "DREndcapTubesSglHpr.hh"
 
-//#define DREndcapTubesSDDebug
+#define DREndcapTubesSDDebug
 
 namespace dd4hep {
   namespace sim {
@@ -116,7 +119,7 @@ namespace dd4hep {
     
       // Skip this step if energy deposit in fiber is 0
       G4double Edep = aStep->GetTotalEnergyDeposit();
-      if(Edep == 0.) return true;
+      //if(Edep == 0.) return true;
 
       dd4hep::BitFieldCoder decoder("tank:1,endcap:1,stave:10,tower:8,air:1,col:10,row:7,clad:1,core:1,cherenkov:1");
       auto VolID = volumeID(aStep);
@@ -163,6 +166,7 @@ namespace dd4hep {
 
       if(!IsCherenkov){ // it is a scintillating fiber
                 
+	m_userData.fEvtAction->AddEdepScin(Edep);
         if ( aStep->GetTrack()->GetParticleDefinition() == G4OpticalPhoton::Definition() ) {
           aStep->GetTrack()->SetTrackStatus( fStopAndKill );
         }
@@ -173,12 +177,48 @@ namespace dd4hep {
         G4double distance_to_sipm = DREndcapTubesSglHpr::GetDistanceToSiPM(aStep);
         signalhit = DREndcapTubesSglHpr::SmearSSignal( DREndcapTubesSglHpr::ApplyBirks( Edep, steplength ) );
         signalhit = DREndcapTubesSglHpr::AttenuateSSignal(signalhit, distance_to_sipm);
+	if(signalhit == 0) return true;
+	m_userData.fEvtAction->AddSglScin(signalhit);
       } // end of scintillating fibre sigal calculation
 
-      else{
+      else{ // it is a Cherenkov fiber
+	// save mc truth info in analysismanager auxiliary outputfile
 	m_userData.fEvtAction->AddEdepCher(Edep);
-	return true;
-      }
+        // calculate the signal in terms of Cherenkov photo-electrons
+        if ( aStep->GetTrack()->GetParticleDefinition() == G4OpticalPhoton::Definition() ) {
+          
+	  G4OpBoundaryProcessStatus theStatus = Undefined;
+          G4ProcessManager* OpManager = G4OpticalPhoton::OpticalPhoton()->GetProcessManager();
+
+          if (OpManager) {
+            G4int MAXofPostStepLoops = OpManager->GetPostStepProcessVector()->entries();
+            G4ProcessVector* fPostStepDoItVector = OpManager->GetPostStepProcessVector(typeDoIt);
+
+            for ( G4int i=0; i<MAXofPostStepLoops; i++) {
+              G4VProcess* fCurrentProcess = (*fPostStepDoItVector)[i];
+              G4OpBoundaryProcess* fOpProcess = dynamic_cast<G4OpBoundaryProcess*>(fCurrentProcess);
+              if (fOpProcess) { theStatus = fOpProcess->GetStatus(); break; }
+            }
+          }
+
+          switch ( theStatus ){
+                                 
+            case TotalInternalReflection: {
+              
+              G4double distance_to_sipm = DREndcapTubesSglHpr::GetDistanceToSiPM(aStep);
+              G4int c_signal = DREndcapTubesSglHpr::SmearCSignal( );
+              signalhit = DREndcapTubesSglHpr::AttenuateSSignal(c_signal, distance_to_sipm);
+	      if(signalhit == 0) return true;
+	      // save mc truth info in analysismanager auxiliary outputfile
+              m_userData.fEvtAction->AddSglCher(signalhit);
+              aStep->GetTrack()->SetTrackStatus( fStopAndKill );
+              break;
+            }
+            default:
+              aStep->GetTrack()->SetTrackStatus( fStopAndKill );
+          } //end of swich cases
+        } //end of optical photon
+      } //end of Cherenkov fiber
 
       // We are going to create an hit per each fiber with a signal above 0
       // Each fiber is identified with a unique volID 
@@ -191,16 +231,12 @@ namespace dd4hep {
 	hit->flag = CherenkovID; // this should be assigned only once
 	G4ThreeVector SiPMVec = DREndcapTubesSglHpr::CalculateSiPMPosition(aStep);
 	Position SiPMPos(SiPMVec.x(),SiPMVec.y(),SiPMVec.z());
-	hit->position = SiPMPos;
-        hit->energyDeposit += signalhit;
-	m_userData.fEvtAction->AddEdepScin(Edep);
-	m_userData.fEvtAction->AddSglScin(signalhit);
+	hit->position = SiPMPos; // this should be assigned only once
+        hit->energyDeposit = signalhit;
         coll->add(VolID, hit); // add the hit to the hit collection
       }
       else { // if the hit exists already, increment its fields
         hit->energyDeposit += signalhit;
-	m_userData.fEvtAction->AddEdepScin(Edep);
-	m_userData.fEvtAction->AddSglScin(signalhit);
       }
 
 

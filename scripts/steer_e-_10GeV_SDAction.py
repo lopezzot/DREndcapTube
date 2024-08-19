@@ -15,7 +15,7 @@ SIM.enableGun = True
 ## Macro file to execute for runType 'run' or 'vis'
 SIM.macroFile = ""
 ## number of events to simulate, used in batch mode
-SIM.numberOfEvents = 1000
+SIM.numberOfEvents = 10
 ## Outputfile from the simulation: .slcio, edm4hep.root and .root output files are supported
 SIM.outputFile = "edm4hep_test.root"
 ## Physics list to use in simulation
@@ -30,6 +30,27 @@ SIM.printLevel = 3
 ## run: run the macroFile and exit
 ## shell: enable interactive session
 SIM.runType = "batch"
+
+# Add Cherenkov process
+def setupCerenkov(kernel):
+	from DDG4 import PhysicsList
+	seq = kernel.physicsList()
+	cerenkov = PhysicsList(kernel, 'Geant4CerenkovPhysics/CerenkovPhys')
+	cerenkov.MaxNumPhotonsPerStep = 1000
+	# cerenkov.MaxBetaChangePerStep = 10.0
+	# cerenkov.TrackSecondariesFirst = True
+	cerenkov.VerboseLevel = 0
+	cerenkov.enableUI()
+	seq.adopt(cerenkov)
+	ph = PhysicsList(kernel, 'Geant4OpticalPhotonPhysics/OpticalGammaPhys')
+	ph.addParticleConstructor('G4OpticalPhoton')
+	ph.VerboseLevel = 0
+	ph.enableUI()
+	seq.adopt(ph)
+	return None
+
+SIM.physics.setupUserPhysics(setupCerenkov)
+# end of adding Cherenkov process
 
 ################################################################################
 ## Configuration for the Detector Construction. 
