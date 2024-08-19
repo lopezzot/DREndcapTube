@@ -106,12 +106,13 @@ namespace dd4hep {
     // Method that accesses the G4Step object at each track step.
     template <> bool Geant4SensitiveAction<DREndcapTubesSDData>::process(const G4Step* aStep, G4TouchableHistory* /*history*/ ) {
     
-      // Skip this step if energy deposit in fiber is 0
       G4double Edep = aStep->GetTotalEnergyDeposit();
-      //if(Edep == 0.) return true;
 
       dd4hep::BitFieldCoder decoder("tank:1,endcap:1,stave:10,tower:8,air:1,col:10,row:7,clad:1,core:1,cherenkov:1");
       auto VolID = volumeID(aStep);
+      auto CherenkovID = decoder.get(VolID,"cherenkov");
+      // Skip this step if edep is 0 and it is a scintillating fiber
+      if(CherenkovID==0 && Edep==0.) return true;
       [[maybe_unused]] auto EndcapID = decoder.get(VolID,"endcap");
       [[maybe_unused]] auto StaveID = decoder.get(VolID,"stave");
       [[maybe_unused]] auto TowerID = decoder.get(VolID,"tower");
@@ -120,7 +121,6 @@ namespace dd4hep {
       [[maybe_unused]] auto RowID = decoder.get(VolID,"row");
       [[maybe_unused]] auto CladID = decoder.get(VolID,"clad");
       [[maybe_unused]] auto CoreID = decoder.get(VolID,"core");
-      auto CherenkovID = decoder.get(VolID,"cherenkov");
 
       G4bool IsCherenkov = CherenkovID; // 1 for cherenkov 0 for scintillating fibers
 
@@ -207,6 +207,7 @@ namespace dd4hep {
               aStep->GetTrack()->SetTrackStatus( fStopAndKill );
           } //end of swich cases
         } //end of optical photon
+	else {return true;}
       } //end of Cherenkov fiber
 
       // We are going to create an hit per each fiber with a signal above 0
