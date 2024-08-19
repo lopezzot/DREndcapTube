@@ -34,7 +34,7 @@
 #include "DREndcapTubesStepAction.hh"
 #include "DREndcapTubesSglHpr.hh"
 
-#define DREndcapTubesSDDebug
+//#define DREndcapTubesSDDebug
 
 namespace dd4hep {
   namespace sim {
@@ -120,14 +120,14 @@ namespace dd4hep {
 
       dd4hep::BitFieldCoder decoder("tank:1,endcap:1,stave:10,tower:8,air:1,col:10,row:7,clad:1,core:1,cherenkov:1");
       auto VolID = volumeID(aStep);
-      auto EndcapID = decoder.get(VolID,"endcap");
-      auto StaveID = decoder.get(VolID,"stave");
-      auto TowerID = decoder.get(VolID,"tower");
-      auto AirID = decoder.get(VolID,"air");
-      auto ColID = decoder.get(VolID,"col");
-      auto RowID = decoder.get(VolID,"row");
-      auto CladID = decoder.get(VolID,"clad");
-      auto CoreID = decoder.get(VolID,"core");
+      [[maybe_unused]] auto EndcapID = decoder.get(VolID,"endcap");
+      [[maybe_unused]] auto StaveID = decoder.get(VolID,"stave");
+      [[maybe_unused]] auto TowerID = decoder.get(VolID,"tower");
+      [[maybe_unused]] auto AirID = decoder.get(VolID,"air");
+      [[maybe_unused]] auto ColID = decoder.get(VolID,"col");
+      [[maybe_unused]] auto RowID = decoder.get(VolID,"row");
+      [[maybe_unused]] auto CladID = decoder.get(VolID,"clad");
+      [[maybe_unused]] auto CoreID = decoder.get(VolID,"core");
       auto CherenkovID = decoder.get(VolID,"cherenkov");
 
       G4bool IsCherenkov = CherenkovID; // 1 for cherenkov 0 for scintillating fibers
