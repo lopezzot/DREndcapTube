@@ -41,13 +41,13 @@
 
 namespace dd4hep {
   namespace sim {
-    class DREndcapTubesSD {
+    class DREndcapTubesSDData {
 
     // Constructor and destructor
     //
     public:
-      DREndcapTubesSD() = default;
-      ~DREndcapTubesSD() = default;  
+      DREndcapTubesSDData() = default;
+      ~DREndcapTubesSDData() = default;  
 
     // Methods
     //
@@ -96,26 +96,26 @@ namespace dd4hep {
 
     // Function template specialization of Geant4SensitiveAction class.
     // Define actions
-    template <> void Geant4SensitiveAction<DREndcapTubesSD>::initialize() {
+    template <> void Geant4SensitiveAction<DREndcapTubesSDData>::initialize() {
 
-      eventAction().callAtBegin(&m_userData, &DREndcapTubesSD::beginEvent);
-      eventAction().callAtEnd(&m_userData, &DREndcapTubesSD::endEvent);
+      eventAction().callAtBegin(&m_userData, &DREndcapTubesSDData::beginEvent);
+      eventAction().callAtEnd(&m_userData, &DREndcapTubesSDData::endEvent);
 
-      runAction().callAtBegin(&m_userData,&DREndcapTubesSD::beginRun);
-      runAction().callAtEnd(&m_userData,&DREndcapTubesSD::endRun);
+      runAction().callAtBegin(&m_userData,&DREndcapTubesSDData::beginRun);
+      runAction().callAtEnd(&m_userData,&DREndcapTubesSDData::endRun);
 
       m_userData.sensitive = this;
     }
 
     // Function template specialization of Geant4SensitiveAction class.
     // Define collections created by this sensitivie action object
-    template <> void Geant4SensitiveAction<DREndcapTubesSD>::defineCollections()    {
+    template <> void Geant4SensitiveAction<DREndcapTubesSDData>::defineCollections()    {
       m_collectionID = declareReadoutFilteredCollection<Geant4Calorimeter::Hit>();
     }
 
     // Function template specialization of Geant4SensitiveAction class.
     // Method that accesses the G4Step object at each track step.
-    template <> bool Geant4SensitiveAction<DREndcapTubesSD>::process(const G4Step* aStep, G4TouchableHistory* /*history*/ ) {
+    template <> bool Geant4SensitiveAction<DREndcapTubesSDData>::process(const G4Step* aStep, G4TouchableHistory* /*history*/ ) {
     
       // Skip this step if energy deposit in fiber is 0
       G4double Edep = aStep->GetTotalEnergyDeposit();
@@ -309,7 +309,7 @@ namespace dd4hep {
 
 //--- Factory declaration
 namespace dd4hep { namespace sim {
-    typedef Geant4SensitiveAction<DREndcapTubesSD> DREndcapTubesSDAction;
+    typedef Geant4SensitiveAction<DREndcapTubesSDData> DREndcapTubesSDAction;
   }}
 DECLARE_GEANT4SENSITIVE(DREndcapTubesSDAction)
 
