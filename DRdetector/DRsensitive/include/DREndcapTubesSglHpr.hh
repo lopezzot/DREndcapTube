@@ -81,7 +81,6 @@ inline G4double DREndcapTubesSglHpr::GetDistanceToSiPM(const G4Step* step) {
   G4Tubs* solid = dynamic_cast<G4Tubs*>(currentVolume->GetSolid());
   // Get the dimensions of the solid (size of the volume)
   G4double size = solid->GetZHalfLength();
-  std::cout<<"fiber length "<<size*2.<<std::endl;
 
   G4double distance_to_sipm = size - localPos.z();
   return distance_to_sipm;
