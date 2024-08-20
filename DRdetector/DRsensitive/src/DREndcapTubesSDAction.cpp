@@ -124,6 +124,12 @@ namespace dd4hep {
 
       G4bool IsCherenkov = CherenkovID; // 1 for cherenkov 0 for scintillating fibers
 
+      // If it is an optical photon inside the CLADDING of Cherenkov fibers kill it
+      if (CladID==1 && CoreID==0 && CherenkovID==1
+	  && aStep->GetTrack()->GetParticleDefinition() == G4OpticalPhoton::Definition() ) {
+        aStep->GetTrack()->SetTrackStatus( fStopAndKill );
+      }
+
       #ifdef DREndcapTubesSDDebug
       //Print out some info step-by-step in sensitive volumes
       //

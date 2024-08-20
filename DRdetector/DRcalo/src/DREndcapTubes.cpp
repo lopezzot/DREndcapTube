@@ -53,6 +53,7 @@ static Ref_t create_detector(Detector &description, xml_h e, SensitiveDetector s
   xml_det_t   x_capillary_C = x_det.child(_Unicode(tube_C));
   xml_det_t   x_clad_S = x_det.child(_Unicode(clad_S));
   xml_det_t   x_clad_C = x_det.child(_Unicode(clad_C));
+  auto x_clad_C_sens = x_clad_C.isSensitive();
   xml_det_t   x_core_S = x_det.child(_Unicode(core_S));
   auto x_core_S_sens = x_core_S.isSensitive();
   xml_det_t   x_core_C = x_det.child(_Unicode(core_C));
@@ -172,6 +173,7 @@ static Ref_t create_detector(Detector &description, xml_h e, SensitiveDetector s
   Tube clad_C(0.*mm, cladRadius, tower_height/2., 2*M_PI); // cladding C
   Volume clad_CLog("clad_CLog",clad_C,description.material(x_clad_C.attr<std::string>(_U(material))));
   clad_CLog.setVisAttributes(description, x_clad_C.visStr());
+  if (x_clad_C_sens) clad_CLog.setSensitiveDetector(sens);
   PlacedVolume clad_CPlaced = capillary_CLog.placeVolume(clad_CLog,Position(0.,0.,0.));
   clad_CPlaced.addPhysVolID("clad",1).addPhysVolID("core",0).addPhysVolID("cherenkov",1);
   Tube core_C(0.*mm, coreRadius, tower_height/2., 2*M_PI); // core C
@@ -386,6 +388,7 @@ static Ref_t create_detector(Detector &description, xml_h e, SensitiveDetector s
                Tube cladShort_C(0.*mm, cladRadius, (capillaryLength_C-TubeLengthOffset)/2., 2*M_PI); // cladding C
                Volume cladShort_CLog("cladShort_CLog",cladShort_C,description.material(x_clad_C.attr<std::string>(_U(material))));
                cladShort_CLog.setVisAttributes(description, x_clad_C.visStr());
+	       if (x_clad_C_sens) cladShort_CLog.setSensitiveDetector(sens);
                PlacedVolume cladShort_CPlaced = capillaryShortLog_C.placeVolume(cladShort_CLog,Position(0.,0.,0.));
                cladShort_CPlaced.addPhysVolID("clad",1).addPhysVolID("core",0).addPhysVolID("cherenkov",1);
                Tube coreShort_C(0.*mm, coreRadius, (capillaryLength_C-TubeLengthOffset)/2., 2*M_PI); // core C
