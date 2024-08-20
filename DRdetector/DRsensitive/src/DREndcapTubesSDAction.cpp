@@ -36,7 +36,7 @@
 #include "DREndcapTubesEvtAction.hh"
 #include "DREndcapTubesSglHpr.hh"
 
-#define DREndcapTubesSDDebug
+//#define DREndcapTubesSDDebug
 
 namespace dd4hep {
   namespace sim {
@@ -196,7 +196,7 @@ namespace dd4hep {
               
               G4double distance_to_sipm = DREndcapTubesSglHpr::GetDistanceToSiPM(aStep);
               G4int c_signal = DREndcapTubesSglHpr::SmearCSignal( );
-              signalhit = DREndcapTubesSglHpr::AttenuateSSignal(c_signal, distance_to_sipm);
+              signalhit = DREndcapTubesSglHpr::AttenuateCSignal(c_signal, distance_to_sipm);
 	      if(signalhit == 0) return true;
 	      // save mc truth info in analysismanager auxiliary outputfile
               m_userData.fEvtAction->AddSglCher(signalhit);
@@ -205,6 +205,7 @@ namespace dd4hep {
             }
             default:
               aStep->GetTrack()->SetTrackStatus( fStopAndKill );
+	      return true;
           } //end of swich cases
         } //end of optical photon
 	else {return true;}
@@ -229,31 +230,8 @@ namespace dd4hep {
         hit->energyDeposit += signalhit;
       }
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-      /*Geant4StepHandler h(step);
-      Position  prePos    = h.prePos();
+      
+      /*Position  prePos    = h.prePos();
       Position  postPos   = h.postPos();
       Position  direction = postPos - prePos;
       Position  pos       = mean_direction(prePos,postPos);
@@ -291,6 +269,7 @@ namespace dd4hep {
 	data->absolute_momentum = h.track->GetMomentum().mag();
 	h.track->SetUserInformation(new Geant4ParticleInformation(std::move(data)));
       }*/
+
       return true;
     } // end of Geant4SensitiveAction::process() method specialization
 
