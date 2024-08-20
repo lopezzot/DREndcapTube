@@ -223,11 +223,14 @@ namespace dd4hep {
 	G4ThreeVector SiPMVec = DREndcapTubesSglHpr::CalculateSiPMPosition(aStep);
 	Position SiPMPos(SiPMVec.x(),SiPMVec.y(),SiPMVec.z());
 	hit->position = SiPMPos; // this should be assigned only once
-        hit->energyDeposit = signalhit;
+        // Note, when the hit is saved in edm4hep format the energyDeposit is
+        // divided by 1000, i.e. it translates from MeV (Geant4 unit) to GeV (DD4hep unit).
+        // Here I am using this field to save photo-electrons, so I multiply it by 1000
+        hit->energyDeposit = signalhit*1000;
         coll->add(VolID, hit); // add the hit to the hit collection
       }
       else { // if the hit exists already, increment its fields
-        hit->energyDeposit += signalhit;
+        hit->energyDeposit += signalhit*1000;
       }
 
       
