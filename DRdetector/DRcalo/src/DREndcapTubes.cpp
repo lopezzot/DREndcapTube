@@ -164,7 +164,7 @@ static Ref_t create_detector(Detector &description, xml_h e, SensitiveDetector s
   core_SLog.setVisAttributes(description, x_core_S.visStr());
   if (x_core_S_sens) core_SLog.setSensitiveDetector(sens);
   PlacedVolume core_SPlaced = clad_SLog.placeVolume(core_SLog);
-  core_SPlaced.addPhysVolID("clad",0).addPhysVolID("core",1).addPhysVolID("cherenkov",0);
+  core_SPlaced.addPhysVolID("core",1).addPhysVolID("cherenkov",0);
 
   // Create a C tube with full tower length
   Tube capillary_C(0.*mm, tubeRadius, tower_height/2., 2*M_PI);
@@ -181,7 +181,7 @@ static Ref_t create_detector(Detector &description, xml_h e, SensitiveDetector s
   core_CLog.setVisAttributes(description, x_core_C.visStr());
   if (x_core_C_sens) core_CLog.setSensitiveDetector(sens);
   PlacedVolume core_CPlaced = clad_CLog.placeVolume(core_CLog);
-  core_CPlaced.addPhysVolID("clad",0).addPhysVolID("core",1).addPhysVolID("cherenkov",1);
+  core_CPlaced.addPhysVolID("core",1).addPhysVolID("cherenkov",1);
 
   // Build the towers inside and endcap R slice
   //
@@ -342,7 +342,7 @@ static Ref_t create_detector(Detector &description, xml_h e, SensitiveDetector s
            coreShort_SLog.setVisAttributes(description, x_core_S.visStr());
            if (x_core_S_sens) coreShort_SLog.setSensitiveDetector(sens);
            PlacedVolume coreShort_SPlaced = cladShort_SLog.placeVolume(coreShort_SLog);
-           coreShort_SPlaced.addPhysVolID("clad",0).addPhysVolID("core",1).addPhysVolID("cherenkov",0);
+           coreShort_SPlaced.addPhysVolID("core",1).addPhysVolID("cherenkov",0);
 
            PlacedVolume capillaryShortPlaced = towerLog.placeVolume(capillaryShortLog, Position(x_tube, y_tube, length/2.-capillaryLength/2.+TubeLengthOffset/2.));
            // ID this volume with row ID and column ID
@@ -396,7 +396,7 @@ static Ref_t create_detector(Detector &description, xml_h e, SensitiveDetector s
                coreShort_CLog.setVisAttributes(description, x_core_C.visStr());
                if (x_core_C_sens) coreShort_CLog.setSensitiveDetector(sens);
                PlacedVolume coreShort_CPlaced = cladShort_CLog.placeVolume(coreShort_CLog);
-               coreShort_CPlaced.addPhysVolID("clad",0).addPhysVolID("core",1).addPhysVolID("cherenkov",1);
+               coreShort_CPlaced.addPhysVolID("core",1).addPhysVolID("cherenkov",1);
 
                PlacedVolume capillaryShortPlaced_C = towerLog.placeVolume(capillaryShortLog_C,Position(x_tube_C, y_tube_C, length/2.-capillaryLength_C/2.+TubeLengthOffset/2.));
                capillaryShortPlaced_C.addPhysVolID("row",k).addPhysVolID("col",j);
