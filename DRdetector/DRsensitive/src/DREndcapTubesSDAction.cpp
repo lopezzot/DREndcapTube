@@ -76,6 +76,7 @@ namespace dd4hep {
       DREndcapTubesRunAction* fRunAction;
       DREndcapTubesEvtAction* fEvtAction;
       Geant4Sensitive*  sensitive{};
+      int collection_cher;
     };
   } // namespace sim
 } // namespace dd4hep
@@ -99,7 +100,9 @@ namespace dd4hep {
     // Function template specialization of Geant4SensitiveAction class.
     // Define collections created by this sensitivie action object
     template <> void Geant4SensitiveAction<DREndcapTubesSDData>::defineCollections()    {
-      m_collectionID = declareReadoutFilteredCollection<Geant4Calorimeter::Hit>();
+      std::string ROname = m_sensitive.readout().name();
+      m_collectionID = defineCollection<Geant4Calorimeter::Hit>(ROname+"Scin");
+      m_userData.collection_cher = defineCollection<Geant4Calorimeter::Hit>(ROname+"Cher");
     }
 
     // Function template specialization of Geant4SensitiveAction class.
@@ -158,9 +161,10 @@ namespace dd4hep {
       //
       G4double steplength = aStep->GetStepLength();
       G4int signalhit = 0;
+      Geant4HitCollection* coll = (IsCherenkov ? collection(m_userData.collection_cher) : collection(m_collectionID));
 
       if(!IsCherenkov){ // it is a scintillating fiber
-                
+ 
 	m_userData.fEvtAction->AddEdepScin(Edep);
         if ( aStep->GetTrack()->GetParticleDefinition() == G4OpticalPhoton::Definition() ) {
           aStep->GetTrack()->SetTrackStatus( fStopAndKill );
@@ -220,7 +224,6 @@ namespace dd4hep {
       // We are going to create an hit per each fiber with a signal above 0
       // Each fiber is identified with a unique volID 
       //
-      Geant4HitCollection* coll    = collection(m_collectionID); // hit collection
       Geant4Calorimeter::Hit* hit  = coll->findByKey<Geant4Calorimeter::Hit>(VolID); // the hit
       if(!hit){ // if the hit does not exist yet, create it
         hit = new Geant4Calorimeter::Hit();
@@ -238,8 +241,7 @@ namespace dd4hep {
       else { // if the hit exists already, increment its fields
         hit->energyDeposit += signalhit*1000;
       }
-
-      
+ 
       /*Position  prePos    = h.prePos();
       Position  postPos   = h.postPos();
       Position  direction = postPos - prePos;
