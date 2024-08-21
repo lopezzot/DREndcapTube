@@ -50,7 +50,7 @@ The following command performs a material scan along a line from (0,0,0) to (10,
 materialScan ./DRdetector/DRcalo/compact/DREndcapTubes.xml 0 0 0 10 200 500
 ```
 
-### Run simple simulations
+### Run simulations
 The following command can perform simple simulations with the particle gun.
 ```sh
 ddsim --compactFile DRdetector/DRcalo/compact/DREndcapTubes.xml --enableGun --gun.particle geantino --gun.energy 1000*MeV --gun.direction "0 0 -1" --gun.position "0 200*cm 0" --outputFile out_edm4hep.root -N 100 --part.userParticleHandler=""
@@ -60,7 +60,11 @@ The following command performs a simulation according to a steering file.
 ddsim --steeringFile scripts/steer_mu_0_5GeV.py --part.userParticleHandler=''
 ```
 a steering file template can be obtained with `ddsim --dumpSteeringFile`.
-A geometry description `gdml` file can be created using the dedicated entry in the steering file. 
+A geometry description `gdml` file can be created using the dedicated entry in the steering file.
+The following command performs a simulation with optical photons and a sensitive detector.
+```sh
+ddsim --steeringFile scripts/steer_e-_10GeV_SDAction.py --part.userParticleHandler=''
+```
 
 ### Alternative approach to build, compile and visualize geometry using a local DD4hep installation
 I experienced crashes while visualizing the geometry over ssh connection to lxplus-alma9 machines.
