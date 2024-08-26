@@ -129,7 +129,8 @@ static Ref_t create_detector(Detector &description, xml_h e, SensitiveDetector s
   // Place logical volume containing the Endcap R slice multiple times
   //
   // Rotate the endcap R slice around the Z axis
-  for(std::size_t j=0;j<static_cast<std::size_t>(NbOfZRot);j++){
+  //for(std::size_t j=0;j<static_cast<std::size_t>(NbOfZRot);j++){
+  for(std::size_t j=0;j<static_cast<std::size_t>(16);j++){
 
     // Placement of right endcap (positive z-coordinate)
     RotationZ rotz1(M_PI/2.);    // here I discovered that dd4hep rotations around Z are inverted
@@ -143,10 +144,10 @@ static Ref_t create_detector(Detector &description, xml_h e, SensitiveDetector s
     phiERPlaced.addPhysVolID("endcap",0).addPhysVolID("stave",j+1);
 
     // Placement of left endcap (negative z-coordinate)
-    RotationY rotyleft(0.);
+    /*RotationY rotyleft(0.);
     Transform3D slice_trnsformleft(rotz1*rotz2*rotx*rotyleft, Position(0,0,-1.*((innerR)*tan(thetaB)+length/2.))); 
     PlacedVolume phiELPlaced = tank_vol.placeVolume(phiERLog,slice_trnsformleft);
-    phiELPlaced.addPhysVolID("endcap",1).addPhysVolID("stave",j+1);
+    phiELPlaced.addPhysVolID("endcap",1).addPhysVolID("stave",j+1);*/
   } // end of slice/stave placement
 
   // Create an S tube with full tower length
@@ -160,7 +161,7 @@ static Ref_t create_detector(Detector &description, xml_h e, SensitiveDetector s
   // ID this volume with clad (0/1) core (0/1) and cherekov (0/1) ids
   clad_SPlaced.addPhysVolID("clad",1).addPhysVolID("core",0).addPhysVolID("cherenkov",0);
   Tube core_S(0.*mm, coreRadius, tower_height/2., 2*M_PI); // core S
-  Volume core_SLog("coreS_Log",core_S,description.material(x_core_S.attr<std::string>(_U(material))));
+  Volume core_SLog("DRETScoreS_Log",core_S,description.material(x_core_S.attr<std::string>(_U(material))));
   core_SLog.setVisAttributes(description, x_core_S.visStr());
   if (x_core_S_sens) core_SLog.setSensitiveDetector(sens);
   PlacedVolume core_SPlaced = clad_SLog.placeVolume(core_SLog);
@@ -171,13 +172,13 @@ static Ref_t create_detector(Detector &description, xml_h e, SensitiveDetector s
   Volume capillary_CLog("capillary_CLog",capillary_C,description.material(x_capillary_C.attr<std::string>(_U(material))));
   capillary_CLog.setVisAttributes(description, x_capillary_C.visStr());
   Tube clad_C(0.*mm, cladRadius, tower_height/2., 2*M_PI); // cladding C
-  Volume clad_CLog("clad_CLog",clad_C,description.material(x_clad_C.attr<std::string>(_U(material))));
+  Volume clad_CLog("DRETSclad_CLog",clad_C,description.material(x_clad_C.attr<std::string>(_U(material))));
   clad_CLog.setVisAttributes(description, x_clad_C.visStr());
   if (x_clad_C_sens) clad_CLog.setSensitiveDetector(sens);
   PlacedVolume clad_CPlaced = capillary_CLog.placeVolume(clad_CLog,Position(0.,0.,0.));
   clad_CPlaced.addPhysVolID("clad",1).addPhysVolID("core",0).addPhysVolID("cherenkov",1);
   Tube core_C(0.*mm, coreRadius, tower_height/2., 2*M_PI); // core C
-  Volume core_CLog("coreC_Log",core_C,description.material(x_core_C.attr<std::string>(_U(material))));
+  Volume core_CLog("DRETScoreC_Log",core_C,description.material(x_core_C.attr<std::string>(_U(material))));
   core_CLog.setVisAttributes(description, x_core_C.visStr());
   if (x_core_C_sens) core_CLog.setSensitiveDetector(sens);
   PlacedVolume core_CPlaced = clad_CLog.placeVolume(core_CLog);
@@ -338,7 +339,7 @@ static Ref_t create_detector(Detector &description, xml_h e, SensitiveDetector s
            PlacedVolume cladShort_SPlaced = capillaryShortLog.placeVolume(cladShort_SLog,Position(0.,0.,0.));
            cladShort_SPlaced.addPhysVolID("clad",1).addPhysVolID("core",0).addPhysVolID("cherenkov",0);
            Tube coreShort_S(0.*mm, coreRadius, (capillaryLength-TubeLengthOffset)/2., 2*M_PI); // core S
-           Volume coreShort_SLog("coreSShort_Log",coreShort_S,description.material(x_core_S.attr<std::string>(_U(material))));
+           Volume coreShort_SLog("DRETScoreSShort_Log",coreShort_S,description.material(x_core_S.attr<std::string>(_U(material))));
            coreShort_SLog.setVisAttributes(description, x_core_S.visStr());
            if (x_core_S_sens) coreShort_SLog.setSensitiveDetector(sens);
            PlacedVolume coreShort_SPlaced = cladShort_SLog.placeVolume(coreShort_SLog);
@@ -386,13 +387,13 @@ static Ref_t create_detector(Detector &description, xml_h e, SensitiveDetector s
                capillaryShortLog_C.setVisAttributes(description, x_capillary_C.visStr());
 
                Tube cladShort_C(0.*mm, cladRadius, (capillaryLength_C-TubeLengthOffset)/2., 2*M_PI); // cladding C
-               Volume cladShort_CLog("cladShort_CLog",cladShort_C,description.material(x_clad_C.attr<std::string>(_U(material))));
+               Volume cladShort_CLog("DRETScladShort_CLog",cladShort_C,description.material(x_clad_C.attr<std::string>(_U(material))));
                cladShort_CLog.setVisAttributes(description, x_clad_C.visStr());
 	       if (x_clad_C_sens) cladShort_CLog.setSensitiveDetector(sens);
                PlacedVolume cladShort_CPlaced = capillaryShortLog_C.placeVolume(cladShort_CLog,Position(0.,0.,0.));
                cladShort_CPlaced.addPhysVolID("clad",1).addPhysVolID("core",0).addPhysVolID("cherenkov",1);
                Tube coreShort_C(0.*mm, coreRadius, (capillaryLength_C-TubeLengthOffset)/2., 2*M_PI); // core C
-               Volume coreShort_CLog("coreCShort_Log",coreShort_C,description.material(x_core_C.attr<std::string>(_U(material))));
+               Volume coreShort_CLog("DRETScoreCShort_Log",coreShort_C,description.material(x_core_C.attr<std::string>(_U(material))));
                coreShort_CLog.setVisAttributes(description, x_core_C.visStr());
                if (x_core_C_sens) coreShort_CLog.setSensitiveDetector(sens);
                PlacedVolume coreShort_CPlaced = cladShort_CLog.placeVolume(coreShort_CLog);
