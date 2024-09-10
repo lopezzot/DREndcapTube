@@ -129,8 +129,7 @@ static Ref_t create_detector(Detector &description, xml_h e, SensitiveDetector s
   // Place logical volume containing the Endcap R slice multiple times
   //
   // Rotate the endcap R slice around the Z axis
-  //for(std::size_t j=0;j<static_cast<std::size_t>(NbOfZRot);j++){
-  for(std::size_t j=0;j<static_cast<std::size_t>(16);j++){
+  for(std::size_t j=0;j<static_cast<std::size_t>(NbOfZRot);j++){
 
     // Placement of right endcap (positive z-coordinate)
     RotationZ rotz1(M_PI/2.);    // here I discovered that dd4hep rotations around Z are inverted
@@ -144,10 +143,10 @@ static Ref_t create_detector(Detector &description, xml_h e, SensitiveDetector s
     phiERPlaced.addPhysVolID("endcap",0).addPhysVolID("stave",j+1);
 
     // Placement of left endcap (negative z-coordinate)
-    /*RotationY rotyleft(0.);
+    RotationY rotyleft(0.);
     Transform3D slice_trnsformleft(rotz1*rotz2*rotx*rotyleft, Position(0,0,-1.*((innerR)*tan(thetaB)+length/2.))); 
     PlacedVolume phiELPlaced = tank_vol.placeVolume(phiERLog,-(j+1),slice_trnsformleft);
-    phiELPlaced.addPhysVolID("endcap",1).addPhysVolID("stave",j+1);*/
+    phiELPlaced.addPhysVolID("endcap",1).addPhysVolID("stave",j+1);
   } // end of slice/stave placement
 
   // Create an S tube with full tower length

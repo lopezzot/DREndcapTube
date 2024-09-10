@@ -76,7 +76,9 @@ namespace dd4hep {
       DREndcapTubesRunAction* fRunAction;
       DREndcapTubesEvtAction* fEvtAction;
       Geant4Sensitive*  sensitive{};
-      int collection_cher;
+      int collection_cher_right;
+      int collection_cher_left;
+      int collection_scin_left;
     };
   } // namespace sim
 } // namespace dd4hep
@@ -101,8 +103,10 @@ namespace dd4hep {
     // Define collections created by this sensitivie action object
     template <> void Geant4SensitiveAction<DREndcapTubesSDData>::defineCollections()    {
       std::string ROname = m_sensitive.readout().name();
-      m_collectionID = defineCollection<Geant4Calorimeter::Hit>(ROname+"Scin");
-      m_userData.collection_cher = defineCollection<Geant4Calorimeter::Hit>(ROname+"Cher");
+      m_collectionID = defineCollection<Geant4Calorimeter::Hit>(ROname+"ScinRight");
+      m_userData.collection_cher_right = defineCollection<Geant4Calorimeter::Hit>(ROname+"CherRight");
+      m_userData.collection_scin_left = defineCollection<Geant4Calorimeter::Hit>(ROname+"ScinLeft");
+      m_userData.collection_cher_left = defineCollection<Geant4Calorimeter::Hit>(ROname+"CherLeft");
     }
 
     // Function template specialization of Geant4SensitiveAction class.
@@ -137,9 +141,10 @@ namespace dd4hep {
 
       auto Edep = aStep->GetTotalEnergyDeposit();
       auto cpNo = aStep->GetPreStepPoint()->GetTouchable()->GetCopyNumber(); 
-      [[maybe_unused]] bool IsScin = (cpNo == 0);
+      bool IsScin = (cpNo == 0);
       bool IsCher = (cpNo == 2);
       bool IsCherClad = (cpNo == 3);
+      bool IsRight = (aStep->GetPreStepPoint()->GetPosition().z()>0.);
 
       // Skip this step if edep is 0 and it is a scintillating fiber
       if(IsScin && Edep==0.) return true;
@@ -185,7 +190,10 @@ namespace dd4hep {
       //
       G4double steplength = aStep->GetStepLength();
       G4int signalhit = 0;
-      Geant4HitCollection* coll = (IsCher ? collection(m_userData.collection_cher) : collection(m_collectionID));
+      Geant4HitCollection* coll = (IsRight&&IsScin) ? collection(m_collectionID)
+	  : (IsRight&&!IsScin) ? collection(m_userData.collection_cher_right)
+	  : (!IsRight&&IsScin) ? collection(m_userData.collection_scin_left)
+	  : collection(m_userData.collection_cher_left);
 
       if(!IsCher){ // it is a scintillating fiber
  
