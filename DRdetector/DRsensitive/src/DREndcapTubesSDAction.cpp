@@ -7,10 +7,6 @@
 //**************************************************************************
 
 // Includers from DD4HEP
-//#include <DDG4/Geant4SensDetAction.inl>
-//#include <DDG4/Geant4ParticleInformation.h>
-//#include <DDG4/Factories.h>
-
 #include "DD4hep/Version.h"
 #include "DDG4/Geant4SensDetAction.inl"
 #include "DDG4/Factories.h"
@@ -18,6 +14,10 @@
 #include "DDG4/Geant4RunAction.h"
 #include "DDG4/Geant4GeneratorAction.h"
 #include "DDG4/Geant4Mapping.h"
+#include "DD4hep/Segmentations.h"
+
+// Includers from Geant4
+#include "G4OpBoundaryProcess.hh"
 #include "G4OpticalPhoton.hh"
 #include "G4VProcess.hh"
 #include "G4UserSteppingAction.hh"
@@ -25,11 +25,6 @@
 #include "G4Poisson.hh"
 #include "globals.hh"
 #include "G4ProcessManager.hh"
-#include "G4OpBoundaryProcess.hh"
-#include "DD4hep/Segmentations.h"
-
-// Includers from Geant4
-#include "G4OpBoundaryProcess.hh"
 
 // Includers from project files
 #include "DREndcapTubesRunAction.hh"
