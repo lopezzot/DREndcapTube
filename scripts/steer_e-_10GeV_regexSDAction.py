@@ -9,6 +9,13 @@ SIM.action.mapActions['DREndcapTubes'] = "DREndcapTubesSDAction"
 SIM.filter.calo = ""
 ## end of calorimeter sensitive detector action
 
+# Configure the regexSD
+SIM.geometry.regexSensitiveDetector['DREndcapTubes'] = {'Match': ['DRETS'],
+                                                         'OutputLevel': 4,
+                                                         }
+
+SIM.part.userParticleHandler=''
+
 ## The compact XML file, or multiple compact files, if the last one is the closer.
 SIM.compactFile = ["DRdetector/DRcalo/compact/DREndcapTubes.xml"]
 SIM.enableGun = True

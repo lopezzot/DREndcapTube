@@ -304,9 +304,9 @@
       <tube_S material="Brass" outer_radius="TubeRadius" sensitive="false" vis="tube_S_Vis"/>
       <tube_C material="Brass" outer_radius="TubeRadius" sensitive="false" vis="tube_C_Vis"/>
       <clad_S material="PMMA_Scin" outer_radius="CladRadius" sensitive="false" vis="clad_S_Vis"/>
-      <clad_C material="Fluorinated_Polymer" outer_radius="CladRadius" sensitive="true" vis="clad_C_Vis"/>
-      <core_S material="DR_Polystyrene" outer_radius="CoreRadius" sensitive="true" vis="core_S_Vis"/>
-      <core_C material="PMMA" outer_radius="CoreRadius" sensitive="true" vis="core_C_Vis"/>
+      <clad_C material="Fluorinated_Polymer" outer_radius="CladRadius" sensitive="false" vis="clad_C_Vis"/>
+      <core_S material="DR_Polystyrene" outer_radius="CoreRadius" sensitive="false" vis="core_S_Vis"/>
+      <core_C material="PMMA" outer_radius="CoreRadius" sensitive="false" vis="core_C_Vis"/>
     </detector>
   </detectors>
 

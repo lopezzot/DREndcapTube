@@ -17,6 +17,7 @@ cmake -DCMAKE_INSTALL_PREFIX=../install/ ..
 make install
 cd ../install
 export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$PWD/lib64
+export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$PWD/lib
 ```
 
 ### Visualize the geometry
@@ -51,19 +52,19 @@ materialScan ./DRdetector/DRcalo/compact/DREndcapTubes.xml 0 0 0 10 200 500
 ```
 
 ### Run simulations
-The following command can perform simple simulations with the particle gun.
+The following command does a simple simulation with the particle gun.
 ```sh
 ddsim --compactFile DRdetector/DRcalo/compact/DREndcapTubes.xml --enableGun --gun.particle geantino --gun.energy 1000*MeV --gun.direction "0 0 -1" --gun.position "0 200*cm 0" --outputFile out_edm4hep.root -N 100 --part.userParticleHandler=""
 ```
-The following command performs a simulation according to a steering file.
+The following command does a simulation according to a steering file.
 ```sh
-ddsim --steeringFile scripts/steer_mu_0_5GeV.py --part.userParticleHandler=''
+ddsim --steeringFile scripts/steer_mu_0_5GeV.py
 ```
 a steering file template can be obtained with `ddsim --dumpSteeringFile`.
-A geometry description `gdml` file can be created using the dedicated entry in the steering file.
-The following command performs a simulation with optical photons and a sensitive detector.
+A geometry description `gdml` file can be created using the dedicated entry in the steering file.\
+The following command does a simulation with optical photons and a DD4hep regex-sensitive-detector.
 ```sh
-ddsim --steeringFile scripts/steer_e-_10GeV_SDAction.py --part.userParticleHandler=''
+ddsim --steeringFile scripts/steer_e-_10GeV_regexSDAction.py
 ```
 
 ### Alternative approach to build, compile and visualize geometry using a local DD4hep installation

@@ -7,10 +7,6 @@
 //**************************************************************************
 
 // Includers from DD4HEP
-//#include <DDG4/Geant4SensDetAction.inl>
-//#include <DDG4/Geant4ParticleInformation.h>
-//#include <DDG4/Factories.h>
-
 #include "DD4hep/Version.h"
 #include "DDG4/Geant4SensDetAction.inl"
 #include "DDG4/Factories.h"
@@ -18,6 +14,10 @@
 #include "DDG4/Geant4RunAction.h"
 #include "DDG4/Geant4GeneratorAction.h"
 #include "DDG4/Geant4Mapping.h"
+#include "DD4hep/Segmentations.h"
+
+// Includers from Geant4
+#include "G4OpBoundaryProcess.hh"
 #include "G4OpticalPhoton.hh"
 #include "G4VProcess.hh"
 #include "G4UserSteppingAction.hh"
@@ -25,11 +25,6 @@
 #include "G4Poisson.hh"
 #include "globals.hh"
 #include "G4ProcessManager.hh"
-#include "G4OpBoundaryProcess.hh"
-#include "DD4hep/Segmentations.h"
-
-// Includers from Geant4
-#include "G4OpBoundaryProcess.hh"
 
 // Includers from project files
 #include "DREndcapTubesRunAction.hh"
@@ -76,7 +71,9 @@ namespace dd4hep {
       DREndcapTubesRunAction* fRunAction;
       DREndcapTubesEvtAction* fEvtAction;
       Geant4Sensitive*  sensitive{};
-      int collection_cher;
+      int collection_cher_right;
+      int collection_cher_left;
+      int collection_scin_left;
     };
   } // namespace sim
 } // namespace dd4hep
@@ -101,37 +98,64 @@ namespace dd4hep {
     // Define collections created by this sensitivie action object
     template <> void Geant4SensitiveAction<DREndcapTubesSDData>::defineCollections()    {
       std::string ROname = m_sensitive.readout().name();
-      m_collectionID = defineCollection<Geant4Calorimeter::Hit>(ROname+"Scin");
-      m_userData.collection_cher = defineCollection<Geant4Calorimeter::Hit>(ROname+"Cher");
+      m_collectionID = defineCollection<Geant4Calorimeter::Hit>(ROname+"ScinRight");
+      m_userData.collection_cher_right = defineCollection<Geant4Calorimeter::Hit>(ROname+"CherRight");
+      m_userData.collection_scin_left = defineCollection<Geant4Calorimeter::Hit>(ROname+"ScinLeft");
+      m_userData.collection_cher_left = defineCollection<Geant4Calorimeter::Hit>(ROname+"CherLeft");
     }
 
     // Function template specialization of Geant4SensitiveAction class.
     // Method that accesses the G4Step object at each track step.
     template <> bool Geant4SensitiveAction<DREndcapTubesSDData>::process(const G4Step* aStep, G4TouchableHistory* /*history*/ ) {
     
-      G4double Edep = aStep->GetTotalEnergyDeposit();
+      // NOTE: Here we do manipulation of the signal in each fiber (Scintillating and Cherenkov)
+      // to compute the calorimeter signal and populate the corresponding hit.
+      // Sensitive volumes are associated in the steering file using the DD4hep regexSensitiveDetector and matching
+      // the substring DRETS.
+      // Usually DD4hep volIDs are retrieved with something like this
+      // ---
+      // dd4hep::BitFieldCoder decoder("tank:1,endcap:1,stave:10,tower:8,air:1,col:10,row:7,clad:1,core:1,cherenkov:1");
+      // auto VolID = volumeID(aStep);
+      // auto CherenkovID = decoder.get(VolID,"cherenkov");
+      // ---
+      // However using regexSensitiveDetector does not populate the cache that allows using the volumeID() method.
+      // One can still access volIDs in this sensitive detector action with something like this
+      // ---
+      // G4VPhysicalVolume* PhysVol = aStep->GetPreStepPoint()->GetTouchableHandle()->GetVolume();
+      // Geant4Mapping& Mapping = Geant4Mapping::instance();
+      // PlacedVolume PlacedVol = Mapping.placement(PhysVol);
+      // const PlacedVolumeExtension::VolIDs& TestIDs = PlacedVol.volIDs();
+      // auto it = TestIDs.find("name");
+      // std::cout<<it->first<<" "<<it->second<<std::endl;
+      // ---
+      // but this brute force method makes the simulaiton slower by more than two order of magnitudes
+      // (see https://github.com/AIDASoft/DD4hep/issues/1319).
+      // Therefore we use copynumbers instead of volIDs. The copynumbers used are
+      // Scintillating core (0), Cherenkov core (2), Cherenkov cladding (3), Tube (1000*row+column)
+      // and (phi)Stave (NbOfZRot).
 
-      dd4hep::BitFieldCoder decoder("tank:1,endcap:1,stave:10,tower:8,air:1,col:10,row:7,clad:1,core:1,cherenkov:1");
-      auto VolID = volumeID(aStep);
-      auto CherenkovID = decoder.get(VolID,"cherenkov");
+      auto Edep = aStep->GetTotalEnergyDeposit();
+      auto cpNo = aStep->GetPreStepPoint()->GetTouchable()->GetCopyNumber(); 
+      bool IsScin = (cpNo == 0);
+      bool IsCher = (cpNo == 2);
+      bool IsCherClad = (cpNo == 3);
+      bool IsRight = (aStep->GetPreStepPoint()->GetPosition().z()>0.);
+
       // Skip this step if edep is 0 and it is a scintillating fiber
-      if(CherenkovID==0 && Edep==0.) return true;
-      [[maybe_unused]] auto EndcapID = decoder.get(VolID,"endcap");
-      [[maybe_unused]] auto StaveID = decoder.get(VolID,"stave");
-      [[maybe_unused]] auto TowerID = decoder.get(VolID,"tower");
-      [[maybe_unused]] auto AirID = decoder.get(VolID,"air");
-      [[maybe_unused]] auto ColID = decoder.get(VolID,"col");
-      [[maybe_unused]] auto RowID = decoder.get(VolID,"row");
-      [[maybe_unused]] auto CladID = decoder.get(VolID,"clad");
-      [[maybe_unused]] auto CoreID = decoder.get(VolID,"core");
-
-      G4bool IsCherenkov = CherenkovID; // 1 for cherenkov 0 for scintillating fibers
-
-      // If it is an optical photon inside the CLADDING of Cherenkov fibers kill it
-      if (CladID==1 && CoreID==0 && CherenkovID==1
-	  && aStep->GetTrack()->GetParticleDefinition() == G4OpticalPhoton::Definition() ) {
-        aStep->GetTrack()->SetTrackStatus( fStopAndKill );
+      if(IsScin && Edep==0.) return true;
+      // If it is a track inside the cherenkov CLADDING skip this step,
+      // if it is an optical photon kill it first
+      if (IsCherClad){
+        if (aStep->GetTrack()->GetParticleDefinition() == G4OpticalPhoton::Definition()) {
+          aStep->GetTrack()->SetTrackStatus( fStopAndKill );
+        }
+        return true;
       }
+
+      auto TubeID = aStep->GetPreStepPoint()->GetTouchable()->GetCopyNumber(2);
+      auto TowerID = aStep->GetPreStepPoint()->GetTouchable()->GetCopyNumber(3);
+      auto StaveID = aStep->GetPreStepPoint()->GetTouchable()->GetCopyNumber(4);
+      int VolID = 15000000*StaveID+300000*TowerID+TubeID;
 
       #ifdef DREndcapTubesSDDebug
       //Print out some info step-by-step in sensitive volumes
@@ -141,34 +165,34 @@ namespace dd4hep {
       std::cout<<"----> Track #: "<< aStep->GetTrack()->GetTrackID()<< " " <<
                  "Step #: " << aStep->GetTrack()->GetCurrentStepNumber()<< " "<<
                  "Volume: " << aStep->GetPreStepPoint()->GetTouchableHandle()->GetVolume()->GetName()<< " " << std::endl;
-      std::cout<<"--> DREndcapTubes:: position info: "<<std::endl;
+      std::cout<<"--> DREndcapTubes:: position info(mm): "<<std::endl;
       std::cout<<"----> x: "<< aStep->GetPreStepPoint()->GetPosition().x() <<
-                 "y: "<< aStep->GetPreStepPoint()->GetPosition().y() <<
-                 "z: "<< aStep->GetPreStepPoint()->GetPosition().z() << std::endl;
+                 " y: "<< aStep->GetPreStepPoint()->GetPosition().y() <<
+                 " z: "<< aStep->GetPreStepPoint()->GetPosition().z() << std::endl;
       std::cout<<"--> DREndcapTubes: particle info: "<<std::endl;
       std::cout<<"----> Particle "<< aStep->GetTrack()->GetParticleDefinition()->GetParticleName()<< " " <<
                  "Dep(MeV) "<< aStep->GetTotalEnergyDeposit() << " " <<
                  "Mat "     << aStep->GetPreStepPoint()->GetMaterial()->GetName() << " " << 
-                 "Vol "     << aStep->GetPreStepPoint()->GetTouchableHandle()->GetVolume()->GetName() << std::endl; 
-      std::cout<<"--> DREndcapTubes: physVolID info: "<<std::endl;
-      std::cout<<"----> Volume ID "<<volumeID(aStep)<<" Endcap ID "<<EndcapID<<" Stave ID "<<StaveID<<std::endl;
-      std::cout<<"----> Tower ID "<<TowerID<<" Air ID "<<AirID<<std::endl;
-      std::cout<<"----> Col ID "<<ColID<<" Row ID "<<RowID<<std::endl;
-      std::cout<<"----> Clad ID "<<CladID<<" Core ID "<<CoreID<<" Cherenkov ID "<<CherenkovID<<std::endl;
+                 "Vol "     << aStep->GetPreStepPoint()->GetTouchableHandle()->GetVolume()->GetName() << " " <<
+		 "CpNo "    << aStep->GetPreStepPoint()->GetTouchable()->GetCopyNumber()<< " " <<
+		 "CpNo1 "    << aStep->GetPreStepPoint()->GetTouchable()->GetCopyNumber(1)<< " " <<
+		 "CpNo2 "    << aStep->GetPreStepPoint()->GetTouchable()->GetCopyNumber(2)<< " " << 
+		 "CpNo3 "    << aStep->GetPreStepPoint()->GetTouchable()->GetCopyNumber(3)<< " " <<
+		 "CpNo4 "    << aStep->GetPreStepPoint()->GetTouchable()->GetCopyNumber(4)<<std::endl; 
       #endif 
 
       // We now calculate the signal in S and C fiber according to the step contribution
       //
       G4double steplength = aStep->GetStepLength();
       G4int signalhit = 0;
-      Geant4HitCollection* coll = (IsCherenkov ? collection(m_userData.collection_cher) : collection(m_collectionID));
+      Geant4HitCollection* coll = (IsRight&&IsScin) ? collection(m_collectionID)
+	  : (IsRight&&!IsScin) ? collection(m_userData.collection_cher_right)
+	  : (!IsRight&&IsScin) ? collection(m_userData.collection_scin_left)
+	  : collection(m_userData.collection_cher_left);
 
-      if(!IsCherenkov){ // it is a scintillating fiber
+      if(!IsCher){ // it is a scintillating fiber
  
 	m_userData.fEvtAction->AddEdepScin(Edep);
-        if ( aStep->GetTrack()->GetParticleDefinition() == G4OpticalPhoton::Definition() ) {
-          aStep->GetTrack()->SetTrackStatus( fStopAndKill );
-        }
 
         if ( aStep->GetTrack()->GetDefinition()->GetPDGCharge() == 0 || steplength == 0. ) {
 	    return true; // not ionizing particle
@@ -228,7 +252,6 @@ namespace dd4hep {
       if(!hit){ // if the hit does not exist yet, create it
         hit = new Geant4Calorimeter::Hit();
         hit->cellID = VolID; // this should be assigned only once
-	hit->flag = CherenkovID; // this should be assigned only once
 	G4ThreeVector SiPMVec = DREndcapTubesSglHpr::CalculateSiPMPosition(aStep);
 	Position SiPMPos(SiPMVec.x(),SiPMVec.y(),SiPMVec.z());
 	hit->position = SiPMPos; // this should be assigned only once

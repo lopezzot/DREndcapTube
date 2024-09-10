@@ -31,6 +31,8 @@ SIM.printLevel = 3
 ## shell: enable interactive session
 SIM.runType = "batch"
 
+SIM.part.userParticleHandler=''
+
 ################################################################################
 ## Configuration for the Detector Construction. 
 ################################################################################
