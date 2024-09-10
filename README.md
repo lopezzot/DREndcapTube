@@ -17,6 +17,7 @@ cmake -DCMAKE_INSTALL_PREFIX=../install/ ..
 make install
 cd ../install
 export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$PWD/lib64
+export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$PWD/lib
 ```
 
 ### Visualize the geometry
