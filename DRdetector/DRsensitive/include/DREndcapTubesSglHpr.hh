@@ -68,6 +68,9 @@ class DREndcapTubesSglHpr
 
     // Check if photon is travelling towards SiPM
     inline static bool IsReflectedForward(const G4Step* step);
+
+    // Print step info for debugging purposes
+    inline static void PrintStepInfo(const G4Step* aStep);
 };
 
 inline G4double DREndcapTubesSglHpr::GetDistanceToSiPM(const G4Step* step, bool prestep)
@@ -142,6 +145,32 @@ inline bool DREndcapTubesSglHpr::IsReflectedForward(const G4Step* step)
   double PostStepDistance = GetDistanceToSiPM(step, false);
   bool IsReflectedForward = (PostStepDistance < PreStepDistance) ? true : false;
   return IsReflectedForward;
+}
+
+inline void DREndcapTubesSglHpr::PrintStepInfo(const G4Step* aStep)
+{
+  std::cout << "-------------------------------" << std::endl;
+  std::cout << "--> DREndcapTubes: track info: " << std::endl;
+  std::cout << "----> Track #: " << aStep->GetTrack()->GetTrackID() << " "
+            << "Step #: " << aStep->GetTrack()->GetCurrentStepNumber() << " "
+            << "Volume: " << aStep->GetPreStepPoint()->GetTouchableHandle()->GetVolume()->GetName()
+            << " " << std::endl;
+  std::cout << "--> DREndcapTubes:: position info(mm): " << std::endl;
+  std::cout << "----> x: " << aStep->GetPreStepPoint()->GetPosition().x()
+            << " y: " << aStep->GetPreStepPoint()->GetPosition().y()
+            << " z: " << aStep->GetPreStepPoint()->GetPosition().z() << std::endl;
+  std::cout << "--> DREndcapTubes: particle info: " << std::endl;
+  std::cout << "----> Particle " << aStep->GetTrack()->GetParticleDefinition()->GetParticleName()
+            << " "
+            << "Dep(MeV) " << aStep->GetTotalEnergyDeposit() << " "
+            << "Mat " << aStep->GetPreStepPoint()->GetMaterial()->GetName() << " "
+            << "Vol " << aStep->GetPreStepPoint()->GetTouchableHandle()->GetVolume()->GetName()
+            << " "
+            << "CpNo " << aStep->GetPreStepPoint()->GetTouchable()->GetCopyNumber() << " "
+            << "CpNo1 " << aStep->GetPreStepPoint()->GetTouchable()->GetCopyNumber(1) << " "
+            << "CpNo2 " << aStep->GetPreStepPoint()->GetTouchable()->GetCopyNumber(2) << " "
+            << "CpNo3 " << aStep->GetPreStepPoint()->GetTouchable()->GetCopyNumber(3) << " "
+            << "CpNo4 " << aStep->GetPreStepPoint()->GetTouchable()->GetCopyNumber(4) << std::endl;
 }
 
 #endif  // DREndcapTubesSglHpr_h
