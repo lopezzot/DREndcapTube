@@ -263,9 +263,9 @@ bool Geant4SensitiveAction<DREndcapTubesSDData>::process(const G4Step* aStep,
   if (!hit) {  // if the hit does not exist yet, create it
     hit = new Geant4Calorimeter::Hit();
     hit->cellID = VolID;  // this should be assigned only once
-    G4ThreeVector SiPMVec = DREndcapTubesSglHpr::CalculateSiPMPosition(aStep);
-    Position SiPMPos(SiPMVec.x(), SiPMVec.y(), SiPMVec.z());
-    hit->position = SiPMPos;  // this should be assigned only once
+    G4ThreeVector FiberVec = DREndcapTubesSglHpr::CalculateFiberPosition(aStep);
+    Position FiberPos(FiberVec.x(), FiberVec.y(), FiberVec.z());
+    hit->position = FiberPos;  // this should be assigned only once
     // Note, when the hit is saved in edm4hep format the energyDeposit is
     // divided by 1000, i.e. it translates from MeV (Geant4 unit) to GeV (DD4hep unit).
     // Here I am using this field to save photo-electrons, so I multiply it by 1000
