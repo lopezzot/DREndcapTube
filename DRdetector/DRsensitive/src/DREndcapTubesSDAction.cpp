@@ -235,6 +235,8 @@ bool Geant4SensitiveAction<DREndcapTubesSDData>::process(const G4Step* aStep,
 
       switch (theStatus) {
         case TotalInternalReflection: {
+          // Kill Cherenkov photons inside fibers travelling towards the inner tip
+          if (!DREndcapTubesSglHpr::IsReflectedForward(aStep)) return true;
           G4double distance_to_sipm = DREndcapTubesSglHpr::GetDistanceToSiPM(aStep);
           G4int c_signal = DREndcapTubesSglHpr::SmearCSignal();
           signalhit = DREndcapTubesSglHpr::AttenuateCSignal(c_signal, distance_to_sipm);

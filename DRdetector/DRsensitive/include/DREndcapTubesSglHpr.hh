@@ -43,10 +43,11 @@ class DREndcapTubesSglHpr
     static G4int SmearSSignal(const G4double& satde) { return G4Poisson(satde * 9.5); }
 
     // Smear C signal according to Poissonian fluctuations and light yield
-    static G4int SmearCSignal() { return G4Poisson(0.153); }
+    static G4int SmearCSignal() { return G4Poisson(0.177); }
 
     // Calculate distance from step in fiber to SiPM
-    inline static G4double GetDistanceToSiPM(const G4Step* step);
+    inline static G4double GetDistanceToSiPM(const G4Step* step, bool prestep);
+    static G4double GetDistanceToSiPM(const G4Step* step) { return GetDistanceToSiPM(step, true); }
 
     // Calculate how many photons survived after light attenuation
     inline static G4int AttenuateHelper(const G4int& signal, const G4double& distance,
@@ -64,21 +65,23 @@ class DREndcapTubesSglHpr
     }
 
     inline static G4ThreeVector CalculateSiPMPosition(const G4Step* step);
+
+    // Check if photon is travelling towards SiPM
+    inline static bool IsReflectedForward(const G4Step* step);
 };
 
-inline G4double DREndcapTubesSglHpr::GetDistanceToSiPM(const G4Step* step)
+inline G4double DREndcapTubesSglHpr::GetDistanceToSiPM(const G4Step* step, bool prestep)
 {
   // Get the pre-step point
-  const G4StepPoint* preStepPoint = step->GetPreStepPoint();
-  // Get the global position of the pre-step point
-  G4ThreeVector globalPos = preStepPoint->GetPosition();
-  // Get the local position of the pre-step point in the current volume's coordinate system
+  const G4StepPoint* StepPoint = prestep ? step->GetPreStepPoint() : step->GetPostStepPoint();
+  // Get the global position of the step point
+  G4ThreeVector globalPos = StepPoint->GetPosition();
+  // Get the local position of the step point in the current volume's coordinate system
   G4ThreeVector localPos =
-    preStepPoint->GetTouchableHandle()->GetHistory()->GetTopTransform().TransformPoint(globalPos);
+    StepPoint->GetTouchableHandle()->GetHistory()->GetTopTransform().TransformPoint(globalPos);
 
   // Get the logical volume of the current step
-  G4LogicalVolume* currentVolume =
-    preStepPoint->GetTouchableHandle()->GetVolume()->GetLogicalVolume();
+  G4LogicalVolume* currentVolume = StepPoint->GetTouchableHandle()->GetVolume()->GetLogicalVolume();
   // Get the solid associated with the logical volume
   G4Tubs* solid = dynamic_cast<G4Tubs*>(currentVolume->GetSolid());
   // Get the dimensions of the solid (size of the volume)
@@ -126,6 +129,19 @@ inline G4ThreeVector DREndcapTubesSglHpr::CalculateSiPMPosition(const G4Step* st
   G4ThreeVector SiPMvecPos = vectPos + Halffibervect;
 
   return SiPMvecPos;
+}
+
+// Check if photon is travelling towards SiPM
+// If a (Cherenkov) photon is internally reflected in fibers
+// it might travel towards the SiPM or the inner finer tip.
+// As we do not consider reflections at the inner fiber tip
+// photons travelling backwards should be killed.
+inline bool DREndcapTubesSglHpr::IsReflectedForward(const G4Step* step)
+{
+  double PreStepDistance = GetDistanceToSiPM(step, true);
+  double PostStepDistance = GetDistanceToSiPM(step, false);
+  bool IsReflectedForward = (PostStepDistance < PreStepDistance) ? true : false;
+  return IsReflectedForward;
 }
 
 #endif  // DREndcapTubesSglHpr_h
