@@ -64,7 +64,7 @@ class DREndcapTubesSglHpr
       return AttenuateHelper(signal, distance, fCAttenuationLength);
     }
 
-    inline static G4ThreeVector CalculateSiPMPosition(const G4Step* step);
+    inline static G4ThreeVector CalculateFiberPosition(const G4Step* step);
 
     // Check if photon is travelling towards SiPM
     inline static bool IsReflectedForward(const G4Step* step);
@@ -104,7 +104,7 @@ inline G4int DREndcapTubesSglHpr::AttenuateHelper(const G4int& signal, const G4d
   return survived_photons;
 }
 
-inline G4ThreeVector DREndcapTubesSglHpr::CalculateSiPMPosition(const G4Step* step)
+inline G4ThreeVector DREndcapTubesSglHpr::CalculateFiberPosition(const G4Step* step)
 {
   G4TouchableHandle theTouchable = step->GetPreStepPoint()->GetTouchableHandle();
   G4ThreeVector origin(0., 0., 0.);
@@ -124,11 +124,11 @@ inline G4ThreeVector DREndcapTubesSglHpr::CalculateSiPMPosition(const G4Step* st
   G4double lengthfiber = size * 2.;
   G4ThreeVector Halffibervect = direction * lengthfiber / 2;
   // Fibre tip position
-  // G4ThreeVector vectPostip = vectPos-Halffibervect;
+  G4ThreeVector vectPostip = vectPos - Halffibervect;
   // SiPM position
-  G4ThreeVector SiPMvecPos = vectPos + Halffibervect;
+  // G4ThreeVector SiPMvecPos = vectPos + Halffibervect;
 
-  return SiPMvecPos;
+  return vectPostip;
 }
 
 // Check if photon is travelling towards SiPM
