@@ -117,8 +117,8 @@ bool Geant4SensitiveAction<DREndcapTubesSDData>::process(const G4Step* aStep,
   // and matching the substring DRETS. Usually DD4hep volIDs are retrieved with something like this
   // ---
   // dd4hep::BitFieldCoder
-  // decoder("tank:1,endcap:1,stave:10,tower:8,air:1,col:10,row:7,clad:1,core:1,cherenkov:1"); auto
-  // VolID = volumeID(aStep); auto CherenkovID = decoder.get(VolID,"cherenkov");
+  // decoder("stave:10,tower:6,air:1,col:16,row:16,clad:1,core:1,cherenkov:1");
+  // auto VolID = volumeID(aStep); auto CherenkovID = decoder.get(VolID,"cherenkov");
   // ---
   // However using regexSensitiveDetector does not populate the cache that allows using the
   // volumeID() method. One can still access volIDs in this sensitive detector action with something
@@ -133,17 +133,25 @@ bool Geant4SensitiveAction<DREndcapTubesSDData>::process(const G4Step* aStep,
   // ---
   // but this brute force method makes the simulaiton slower by more than two order of magnitudes
   // (see https://github.com/AIDASoft/DD4hep/issues/1319).
-  // Therefore we use copynumbers instead of volIDs. The copynumbers used are
-  // Scintillating core (0), Cherenkov core (2), Cherenkov cladding (3), Tube (1000*row+column)
-  // and (phi)Stave (NbOfZRot).
+  // Therefore we use copynumbers instead of volIDs.
+
+#ifdef DREndcapTubesSDDebug
+  // Print out some info step-by-step in sensitive volumes
+  //
+  DREndcapTubesSglHpr::PrintStepInfo(aStep);
+#endif
 
   auto Edep = aStep->GetTotalEnergyDeposit();
   auto cpNo = aStep->GetPreStepPoint()->GetTouchable()->GetCopyNumber();
-  bool IsScin = (cpNo == 0);
-  bool IsCher = (cpNo == 2);
-  bool IsCherClad = (cpNo == 3);
-  bool IsRight = (aStep->GetPreStepPoint()->GetPosition().z() > 0.);
-
+  // The second bit of the CopyNumber corresponds to the "core" entry:
+  // 1 if the step is in the fiber core (S or C) and 0 if it is
+  // in the fiber cladding (C only) 
+  unsigned int CoreID = (cpNo & 0b10) >> 1; // take CpNo 2nd bit
+  bool IsCherClad = (CoreID == 0);
+  // The first bit of the CopyNumber corresponds to the "cherenkov" entry
+  // 1 for C fibers and 0 for S fibers
+  unsigned int CherenkovID = cpNo & 0b1;
+  bool IsScin = (CherenkovID == 0);
   // Skip this step if edep is 0 and it is a scintillating fiber
   if (IsScin && Edep == 0.) return true;
   // If it is a track inside the cherenkov CLADDING skip this step,
@@ -155,16 +163,28 @@ bool Geant4SensitiveAction<DREndcapTubesSDData>::process(const G4Step* aStep,
     return true;
   }
 
-  auto TubeID = aStep->GetPreStepPoint()->GetTouchable()->GetCopyNumber(2);
-  auto TowerID = aStep->GetPreStepPoint()->GetTouchable()->GetCopyNumber(3);
-  auto StaveID = aStep->GetPreStepPoint()->GetTouchable()->GetCopyNumber(4);
-  int VolID = 15000000 * StaveID + 300000 * TowerID + TubeID;
+  // Now we are inside fibers' core volume (either Scintillating or Cherenkov)
 
-#ifdef DREndcapTubesSDDebug
-  // Print out some info step-by-step in sensitive volumes
-  //
-  DREndcapTubesSglHpr::PrintStepInfo(aStep);
-#endif
+  // We recreate the TubeID from the tube copynumber:
+  // fist16 bits for the columnID and second 16 bits for the rowID
+  auto TubeID = aStep->GetPreStepPoint()->GetTouchable()->GetCopyNumber(2);
+  unsigned int ColumnID = TubeID >> 16;
+  unsigned int RawID = TubeID & 0xFFFF;
+  auto TowerID = static_cast<unsigned int>(aStep->GetPreStepPoint()->GetTouchable()->GetCopyNumber(3));
+  auto StaveID = static_cast<unsigned int>(aStep->GetPreStepPoint()->GetTouchable()->GetCopyNumber(4));
+
+  VolumeID VolID = 0; // recreate the 64-bit VolumeID
+  BitFieldCoder bc("stave:10,tower:6,air:1,col:16,row:16,clad:1,core:1,cherenkov:1");
+  bc.set(VolID, "stave" , StaveID);
+  bc.set(VolID, "tower" , TowerID);
+  bc.set(VolID, "air", 0);
+  bc.set(VolID, "col", ColumnID);
+  bc.set(VolID, "row", RawID);
+  bc.set(VolID, "clad", 1);
+  bc.set(VolID, "core", CoreID);
+  bc.set(VolID, "cherenkov", CherenkovID);
+
+  bool IsRight = (aStep->GetPreStepPoint()->GetPosition().z() > 0.);
 
   // We now calculate the signal in S and C fiber according to the step contribution
   //
@@ -175,7 +195,7 @@ bool Geant4SensitiveAction<DREndcapTubesSDData>::process(const G4Step* aStep,
                               : (!IsRight && IsScin) ? collection(m_userData.collection_scin_left)
                                                      : collection(m_userData.collection_cher_left);
 
-  if (!IsCher) {  // it is a scintillating fiber
+  if (IsScin) {  // it is a scintillating fiber
 
     m_userData.fEvtAction->AddEdepScin(Edep);
 
@@ -254,7 +274,6 @@ bool Geant4SensitiveAction<DREndcapTubesSDData>::process(const G4Step* aStep,
   else {  // if the hit exists already, increment its fields
     hit->energyDeposit += signalhit * 1000;
   }
-
   return true;
 }  // end of Geant4SensitiveAction::process() method specialization
 
