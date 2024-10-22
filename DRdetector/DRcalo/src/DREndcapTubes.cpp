@@ -69,7 +69,7 @@ static Ref_t create_detector(Detector& description, xml_h e, SensitiveDetector s
   std::cout << "--> DREndcapTubes: from XML description: innerR " << innerR / m
             << " m, tower length " << tower_height / m << " m, z-rotations " << NbOfZRot;
   // Info for subdetectors
-  xml_det_t x_tank = x_det.child(_Unicode(tank));
+  xml_det_t x_assembly = x_det.child(_Unicode(assembly));
   xml_det_t x_stave = x_det.child(_Unicode(stave));
   xml_det_t x_tower = x_det.child(_Unicode(tower));
   xml_det_t x_capillary_S = x_det.child(_Unicode(tube_S));
@@ -114,10 +114,9 @@ static Ref_t create_detector(Detector& description, xml_h e, SensitiveDetector s
   // Start building the geometry
   //
 
-  // Create a tank to place the calorimeter
-  Box tank_box(x_tank.x(), x_tank.y(), x_tank.z());
-  Volume tank_vol("Tank", tank_box, description.material(x_tank.attr<std::string>(_U(material))));
-  tank_vol.setVisAttributes(description, x_tank.visStr());
+  // The phi-slices (staves) will be placed inside an assembly volume
+  Assembly AssemblyEndcap("DREndcapTubes");
+  AssemblyEndcap.setVisAttributes(description, x_assembly.visStr());
 
   // Volume that contains a slice of the right endcap
   // I use the EightPointSolid/Arb8/G4Generictrap so I define directly its 8 points
@@ -160,7 +159,7 @@ static Ref_t create_detector(Detector& description, xml_h e, SensitiveDetector s
     RotationY roty(M_PI);
     Transform3D slice_trnsform(rotz1 * rotz2 * rotx * roty,
                                Position(0, 0, (innerR)*tan(thetaB) + length / 2.));
-    PlacedVolume phiERPlaced = tank_vol.placeVolume(phiERLog, j, slice_trnsform);
+    PlacedVolume phiERPlaced = AssemblyEndcap.placeVolume(phiERLog, j, slice_trnsform);
     // ID this volume with one number, the rotation
     phiERPlaced.addPhysVolID("stave", j);
 
@@ -168,7 +167,7 @@ static Ref_t create_detector(Detector& description, xml_h e, SensitiveDetector s
     RotationY rotyleft(0.);
     Transform3D slice_trnsformleft(rotz1 * rotz2 * rotx * rotyleft,
                                    Position(0, 0, -1. * ((innerR)*tan(thetaB) + length / 2.)));
-    PlacedVolume phiELPlaced = tank_vol.placeVolume(phiERLog, j+NbOfZRot, slice_trnsformleft);
+    PlacedVolume phiELPlaced = AssemblyEndcap.placeVolume(phiERLog, j+NbOfZRot, slice_trnsformleft);
     phiELPlaced.addPhysVolID("stave", j+NbOfZRot);
   }  // end of slice/stave placement
 
@@ -307,12 +306,12 @@ static Ref_t create_detector(Detector& description, xml_h e, SensitiveDetector s
       // ID this volume with tower ID, for the moment I leave air ID to 0 (dummy)
       towerPlaced.addPhysVolID("tower", i).addPhysVolID("air", 0);
     }
-    // Or, to debug, place towers one next to each other in tank volume
-    /*if(i<35) {
-        double z = static_cast<int>(i/15)*(length+40*cm);
-        double x = (i-static_cast<int>(i/15)*15)*100*cm - 5*m;
-        tank_vol.placeVolume(towerLog,i,Position(-1.*x,0.,-1.*z));
-    }*/
+    // Or, to debug, place towers one next to each other in assembly volume
+    //if(i<35) {
+    //    double z = static_cast<int>(i/15)*(length+40*cm);
+    //    double x = (i-static_cast<int>(i/15)*15)*100*cm - 5*m;
+    //    AssemblyEndcap.placeVolume(towerLog,i,Position(-1.*x,0.,-1.*z));
+    //}
 
     // Capillary placement inside tower (both S and C)
     //
@@ -505,9 +504,9 @@ static Ref_t create_detector(Detector& description, xml_h e, SensitiveDetector s
   DetElement sdet(det_name, x_det.id());
   // Then "Place the subdetector envelope into its mother (typically the top level (world) volume)."
   Volume motherVolume = description.pickMotherVolume(sdet);
-  // Place the tank container inside the mother volume
-  PlacedVolume tankPlace = motherVolume.placeVolume(tank_vol);
-  sdet.setPlacement(tankPlace);
+  // Place the assembly container inside the mother volume
+  PlacedVolume AssemblyEndcapPV = motherVolume.placeVolume(AssemblyEndcap);
+  sdet.setPlacement(AssemblyEndcapPV);
 
   std::cout << "--> DREndcapTubes::create_detector() end" << std::endl;
 

@@ -275,7 +275,7 @@
        and visibile (or invisible) true/false.
   -->
   <display>
-    <vis name="TankVis" alpha="0.05" r="0" g="0.0" b="1.0" showDaughters="true" visible="false"/>
+    <vis name="AssemblyVis" alpha="0.05" r="1.0" g="0.0" b="0.0" showDaughters="true" visible="false"/>
     <vis name="StaveVis" alpha="0.1" r="0" g="0.0" b="1.0" showDaughters="true" visible="true"/>
     <vis name="TowerVis" alpha="0.5" r="1.0" g="0.624" b="0.0" showDaughters="false" visible="true"/>
     <vis name="tube_S_Vis" alpha="1.0" r="1.0" g="0.0" b="0.0" showDaughters="true" visible="true"/>
@@ -292,13 +292,13 @@
        If a detector contains sub-detectors, their information must be included as below.
   -->
   <detectors>
-    <detector name="DREndcapTubes" type="DREndcapTubes" vis="TankVis" id ="0" readout="DREndcapTubesRO">
+    <detector name="DREndcapTubes" type="DREndcapTubes" vis="AssemblyVis" id ="0" readout="DREndcapTubesRO">
     <type_flags type=" DetType_CALORIMETER + DetType_ELECTROMAGNETIC + DetType_BARREL"/>
     <dimensions 
       inner_radius="innerRadius"
       z_length="towerHeight"
       deltaphi="NbOfZRot"/>
-      <tank   x="10*m"    y="10*m"    z="10*m"    material="Air"  vis="TankVis"/>
+      <assembly material="Air" vis="AssemblyVis"/>
       <stave material="Air" vis="StaveVis"/>
       <tower material="Air" vis="TowerVis"/>
       <tube_S material="Brass" outer_radius="TubeRadius" sensitive="false" vis="tube_S_Vis"/>
