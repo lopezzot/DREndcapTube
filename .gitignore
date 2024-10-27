@@ -1,4 +1,9 @@
 build*/
 install*/
+lib*/
+lib64*/
+share*/
+bin*/
+include*/
 *.root
 *.gdml
