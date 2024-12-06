@@ -1,6 +1,10 @@
 # DREndcapTube
 DD4hep description of a dual-readout endcap calorimeter using the capillary tube technology
 
+> [!CAUTION]
+> v0.3 of this simulation has been [merged](https://github.com/key4hep/k4geo/pull/411) inside the FCC full-sim code base.
+> Use the FCC simulation for production and this code *only* for testing and debugging.
+
 ![DREndcapTube](https://github.com/user-attachments/assets/f1acdfd0-afd3-4279-b557-055692a43477)
 
 ## Presentations
